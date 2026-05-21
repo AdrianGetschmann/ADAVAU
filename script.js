@@ -1,81 +1,156 @@
-/* ── City Presets ─────────────────────────────────────────────────────────
-   Data sourced from JLL, BNP Paribas Real Estate, Colliers, Investropa Q1 2026
-   pricePerSqm  : €/m² existing apartments (midpoint of range)
-   rentPerSqm   : €/m²/month (midpoint of range)
-   transferTax  : Grunderwerbsteuer by Bundesland
-   appreciation : Annual nominal forecast (%)
-   rentIncrease : Annual rent growth assumption (%)
-   ────────────────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADAVAU Real Estate — Investment Calculator
+   Data sources: JLL, BNP Paribas Real Estate, Colliers, Investropa Q1 2026
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── City presets ────────────────────────────────────────────────────────── */
 const PRESETS = {
-  leipzig:    { pricePerSqm: 2550, rentPerSqm: 10.8, transferTax: 3.5, appreciation: 6.0, rentIncrease: 4.0, size: 55, label: "Leipzig"    },
-  dresden:    { pricePerSqm: 3000, rentPerSqm: 10.5, transferTax: 3.5, appreciation: 6.0, rentIncrease: 3.5, size: 55, label: "Dresden"    },
-  hannover:   { pricePerSqm: 3400, rentPerSqm: 12.0, transferTax: 5.0, appreciation: 3.5, rentIncrease: 3.0, size: 60, label: "Hannover"   },
-  nuremberg:  { pricePerSqm: 4000, rentPerSqm: 13.0, transferTax: 3.5, appreciation: 3.5, rentIncrease: 3.0, size: 60, label: "Nuremberg"  },
-  cologne:    { pricePerSqm: 5000, rentPerSqm: 15.8, transferTax: 6.5, appreciation: 4.0, rentIncrease: 3.5, size: 55, label: "Cologne"    },
-  dusseldorf: { pricePerSqm: 5000, rentPerSqm: 14.8, transferTax: 6.5, appreciation: 4.5, rentIncrease: 4.0, size: 55, label: "Düsseldorf" },
-  berlin:     { pricePerSqm: 5450, rentPerSqm: 14.0, transferTax: 6.0, appreciation: 4.0, rentIncrease: 3.0, size: 50, label: "Berlin"     },
-  hamburg:    { pricePerSqm: 6200, rentPerSqm: 16.0, transferTax: 5.5, appreciation: 5.0, rentIncrease: 4.0, size: 50, label: "Hamburg"    },
-  frankfurt:  { pricePerSqm: 6000, rentPerSqm: 17.5, transferTax: 6.0, appreciation: 3.5, rentIncrease: 3.0, size: 50, label: "Frankfurt"  },
-  munich:     { pricePerSqm: 9000, rentPerSqm: 18.0, transferTax: 3.5, appreciation: 3.0, rentIncrease: 2.5, size: 45, label: "Munich"     },
+  leipzig:    { pricePerSqm: 2550, rentPerSqm: 10.8, transferTax: 3.5, appreciation: 6.0, rentIncrease: 4.0, size: 55 },
+  dresden:    { pricePerSqm: 3000, rentPerSqm: 10.5, transferTax: 3.5, appreciation: 6.0, rentIncrease: 3.5, size: 55 },
+  hannover:   { pricePerSqm: 3400, rentPerSqm: 12.0, transferTax: 5.0, appreciation: 3.5, rentIncrease: 3.0, size: 60 },
+  nuremberg:  { pricePerSqm: 4000, rentPerSqm: 13.0, transferTax: 3.5, appreciation: 3.5, rentIncrease: 3.0, size: 60 },
+  cologne:    { pricePerSqm: 5000, rentPerSqm: 15.8, transferTax: 6.5, appreciation: 4.0, rentIncrease: 3.5, size: 55 },
+  dusseldorf: { pricePerSqm: 5000, rentPerSqm: 14.8, transferTax: 6.5, appreciation: 4.5, rentIncrease: 4.0, size: 55 },
+  berlin:     { pricePerSqm: 5450, rentPerSqm: 14.0, transferTax: 6.0, appreciation: 4.0, rentIncrease: 3.0, size: 50 },
+  hamburg:    { pricePerSqm: 6200, rentPerSqm: 16.0, transferTax: 5.5, appreciation: 5.0, rentIncrease: 4.0, size: 50 },
+  frankfurt:  { pricePerSqm: 6000, rentPerSqm: 17.5, transferTax: 6.0, appreciation: 3.5, rentIncrease: 3.0, size: 50 },
+  munich:     { pricePerSqm: 9000, rentPerSqm: 18.0, transferTax: 3.5, appreciation: 3.0, rentIncrease: 2.5, size: 45 },
+};
+
+/* ── Conservative defaults (pessimistic baseline) ────────────────────────── */
+const CONSERVATIVE = {
+  size:         55,
+  pricePerSqm:  3000,   // mid-range entry
+  downPayment:  30,     // solid equity buffer
+  mortgageRate: 4.2,    // slightly above current market
+  loanTerm:     25,
+  rentPerSqm:   9.5,    // below market median
+  rentIncrease: 2.0,    // low growth assumption
+  vacancy:      5.0,    // higher than city average
+  mgmtFee:      10.0,   // higher-end management fee
+  maintenance:  1.5,    // above-average maintenance
+  transferTax:  5.0,    // mid-range state
+  appreciation: 3.0,    // conservative appreciation
 };
 
 /* ── Chart instance ──────────────────────────────────────────────────────── */
 let chart = null;
 
-/* ── Sync range ↔ number inputs ──────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPARABLES NAV — scroll to section + highlight active link
+══════════════════════════════════════════════════════════════════════════ */
+function compNavClick(el) {
+  document.querySelectorAll('.comp-nav-link').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOOLTIP
+══════════════════════════════════════════════════════════════════════════ */
+const tooltipEl = document.getElementById('tooltip');
+
+document.addEventListener('mouseover', e => {
+  const icon = e.target.closest('.info-icon');
+  if (!icon) return;
+  const text = icon.getAttribute('data-tip');
+  if (!text) return;
+  tooltipEl.textContent = text;
+  tooltipEl.classList.add('visible');
+  positionTooltip(e);
+});
+document.addEventListener('mousemove', e => {
+  if (tooltipEl.classList.contains('visible')) positionTooltip(e);
+});
+document.addEventListener('mouseout', e => {
+  if (e.target.closest('.info-icon')) tooltipEl.classList.remove('visible');
+});
+
+function positionTooltip(e) {
+  const pad = 12;
+  const tw = tooltipEl.offsetWidth;
+  const th = tooltipEl.offsetHeight;
+  let x = e.clientX + pad;
+  let y = e.clientY - th / 2;
+  if (x + tw > window.innerWidth - 8) x = e.clientX - tw - pad;
+  if (y < 8) y = 8;
+  if (y + th > window.innerHeight - 8) y = window.innerHeight - th - 8;
+  tooltipEl.style.left = x + 'px';
+  tooltipEl.style.top  = y + 'px';
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INPUT SYNC
+══════════════════════════════════════════════════════════════════════════ */
 function syncNum(rangeId, numId) {
-  const v = document.getElementById(rangeId).value;
-  document.getElementById(numId).value = v;
-  updateRangeGradient(rangeId);
+  document.getElementById(numId).value = document.getElementById(rangeId).value;
+  updateGradient(rangeId);
 }
 function syncRange(numId, rangeId) {
-  const el = document.getElementById(rangeId);
-  const v = document.getElementById(numId).value;
-  el.value = v;
-  updateRangeGradient(rangeId);
+  document.getElementById(rangeId).value = document.getElementById(numId).value;
+  updateGradient(rangeId);
 }
-function updateRangeGradient(id) {
+function updateGradient(id) {
   const el = document.getElementById(id);
   if (!el || el.type !== 'range') return;
-  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
-  const pct = ((val - min) / (max - min)) * 100;
-  el.style.background = `linear-gradient(to right, #1a56db ${pct}%, #e2e8f0 ${pct}%)`;
+  const pct = ((parseFloat(el.value) - parseFloat(el.min)) / (parseFloat(el.max) - parseFloat(el.min))) * 100;
+  el.style.background = `linear-gradient(to right,#1a56db ${pct}%,#e2e8f0 ${pct}%)`;
+}
+
+/* ── Set a single field value ────────────────────────────────────────────── */
+function setField(rangeId, numId, val) {
+  const r = document.getElementById(rangeId);
+  const n = document.getElementById(numId);
+  if (r) r.value = val;
+  if (n) n.value = val;
+  if (r) updateGradient(rangeId);
 }
 
 /* ── Apply city preset ───────────────────────────────────────────────────── */
 function applyPreset(city) {
   const p = PRESETS[city];
   if (!p) return;
-
-  // Mark active button
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   document.querySelector(`[data-city="${city}"]`)?.classList.add('active');
-
-  // Set values
-  const fields = {
-    size:         p.size,
-    sizeNum:      p.size,
-    pricePerSqm:  p.pricePerSqm,
-    pricePerSqmNum: p.pricePerSqm,
-    rentPerSqm:   p.rentPerSqm,
-    rentPerSqmNum: p.rentPerSqm,
-    transferTax:  p.transferTax,
-    transferTaxNum: p.transferTax,
-    appreciation: p.appreciation,
-    appreciationNum: p.appreciation,
-    rentIncrease: p.rentIncrease,
-    rentIncreaseNum: p.rentIncrease,
-  };
-  for (const [id, val] of Object.entries(fields)) {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  }
-  // Update gradients
-  ['size','pricePerSqm','rentPerSqm','transferTax','appreciation','rentIncrease'].forEach(updateRangeGradient);
+  setField('size',        'sizeNum',        p.size);
+  setField('pricePerSqm', 'pricePerSqmNum', p.pricePerSqm);
+  setField('rentPerSqm',  'rentPerSqmNum',  p.rentPerSqm);
+  setField('transferTax', 'transferTaxNum', p.transferTax);
+  setField('appreciation','appreciationNum',p.appreciation);
+  setField('rentIncrease','rentIncreaseNum',p.rentIncrease);
   recalc();
 }
 
-/* ── Get all input values ────────────────────────────────────────────────── */
+/* ── Reset to conservative defaults ─────────────────────────────────────── */
+function resetConservative() {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  const c = CONSERVATIVE;
+  setField('size',         'sizeNum',         c.size);
+  setField('pricePerSqm',  'pricePerSqmNum',  c.pricePerSqm);
+  setField('downPayment',  'downPaymentNum',  c.downPayment);
+  setField('mortgageRate', 'mortgageRateNum', c.mortgageRate);
+  setField('loanTerm',     'loanTermNum',     c.loanTerm);
+  setField('rentPerSqm',   'rentPerSqmNum',   c.rentPerSqm);
+  setField('rentIncrease', 'rentIncreaseNum', c.rentIncrease);
+  setField('vacancy',      'vacancyNum',      c.vacancy);
+  setField('mgmtFee',      'mgmtFeeNum',      c.mgmtFee);
+  setField('maintenance',  'maintenanceNum',  c.maintenance);
+  setField('transferTax',  'transferTaxNum',  c.transferTax);
+  setField('appreciation', 'appreciationNum', c.appreciation);
+  recalc();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CALCULATIONS
+══════════════════════════════════════════════════════════════════════════ */
 function getInputs() {
   const g = id => parseFloat(document.getElementById(id).value) || 0;
   return {
@@ -94,30 +169,27 @@ function getInputs() {
   };
 }
 
-/* ── Core calculations ───────────────────────────────────────────────────── */
 function calculate(inp) {
-  const {
-    size, pricePerSqm, downPayment, mortgageRate, loanTerm,
-    rentPerSqm, rentIncrease, vacancy, mgmtFee, maintenance,
-    transferTax, appreciation
-  } = inp;
+  const { size, pricePerSqm, downPayment, mortgageRate, loanTerm,
+          rentPerSqm, rentIncrease, vacancy, mgmtFee, maintenance,
+          transferTax, appreciation } = inp;
 
-  // Purchase
-  const purchasePrice = size * pricePerSqm;
-  const acqCostsPct   = transferTax + 0.015 + 0.005 + 0.0357; // tax + notary + register + agent
-  const acqCosts      = purchasePrice * acqCostsPct;
-  const totalOutlay   = purchasePrice + acqCosts;
+  // ── Purchase & financing ──
+  const purchasePrice  = size * pricePerSqm;
+  const acqCostsPct    = transferTax + 0.015 + 0.005 + 0.0357;
+  const acqCosts       = purchasePrice * acqCostsPct;
+  const totalOutlay    = purchasePrice + acqCosts;
+  const loanAmount     = purchasePrice * (1 - downPayment);
+  const equityIn       = purchasePrice * downPayment + acqCosts;
 
-  // Financing
-  const loanAmount    = purchasePrice * (1 - downPayment);
-  const equityIn      = purchasePrice * downPayment + acqCosts;
-  const r             = mortgageRate / 12;
-  const n             = loanTerm * 12;
+  // ── Monthly mortgage (annuity formula) ──
+  const r = mortgageRate / 12;
+  const n = loanTerm * 12;
   const monthlyMortgage = loanAmount > 0 && r > 0
     ? loanAmount * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
-    : loanAmount / n;
+    : (loanAmount > 0 ? loanAmount / n : 0);
 
-  // Year 1 income
+  // ── Year 1 income ──
   const grossRentAnnual  = size * rentPerSqm * 12 * (1 - vacancy);
   const grossRentMonthly = grossRentAnnual / 12;
   const mgmtCost         = grossRentAnnual * mgmtFee;
@@ -125,55 +197,75 @@ function calculate(inp) {
   const netIncomeAnnual  = grossRentAnnual - mgmtCost - maintCost;
   const netIncomeMonthly = netIncomeAnnual / 12;
 
-  // Yields
+  // ── Yields ──
   const grossYield = grossRentAnnual / purchasePrice;
   const netYield   = netIncomeAnnual / purchasePrice;
-  const kpf        = purchasePrice / grossRentAnnual;
+  const kpf        = grossRentAnnual > 0 ? purchasePrice / grossRentAnnual : 0;
 
-  // Cash flow
-  const annualMortgage   = monthlyMortgage * 12;
-  const annualCashFlow   = netIncomeAnnual - annualMortgage;
-  const monthlyCashFlow  = annualCashFlow / 12;
-  const cocReturn        = equityIn > 0 ? annualCashFlow / equityIn : 0;
+  // ── Cash flow ──
+  const annualMortgage  = monthlyMortgage * 12;
+  const annualCashFlow  = netIncomeAnnual - annualMortgage;
+  const monthlyCashFlow = annualCashFlow / 12;
+  const cocReturn       = equityIn > 0 ? annualCashFlow / equityIn : 0;
 
-  // 10-year projection
-  const years = [];
-  let remainingLoan = loanAmount;
-  let cumCashFlow   = -acqCosts; // start with acquisition cost as negative
-  let cumMortgagePrincipal = 0;
+  // ── 10-year projection ──
+  // Year 0 row (starting point for NAV line)
+  const year0 = {
+    year: 0,
+    propertyValue: purchasePrice,
+    grossRent: 0,
+    netIncome: 0,
+    mortgage: 0,
+    cashFlow: 0,
+    loanBalance: loanAmount,
+    equity: purchasePrice * downPayment,
+    cumOpsCF: 0,
+    nav: -equityIn,
+    totalReturn: 0,
+  };
 
-  for (let y = 1; y <= 10; y++) {
+  const years = [year0];
+  let cumOpsCF = 0;   // cumulative operational cash flows (excl. acquisition cost)
+
+  for (let y = 1; y <= loanTerm; y++) {
     const propertyValue = purchasePrice * Math.pow(1 + appreciation, y);
     const rentThisYear  = grossRentAnnual * Math.pow(1 + rentIncrease, y - 1);
     const netThisYear   = rentThisYear * (1 - mgmtFee) - maintCost;
     const cfThisYear    = netThisYear - annualMortgage;
-    cumCashFlow += cfThisYear;
+    cumOpsCF += cfThisYear;
 
-    // Remaining loan balance after y years
+    // Remaining loan balance
     const paymentsLeft = n - y * 12;
     let loanBal = 0;
     if (paymentsLeft > 0 && r > 0) {
       loanBal = monthlyMortgage * (1 - Math.pow(1 + r, -paymentsLeft)) / r;
+    } else if (paymentsLeft > 0) {
+      loanBal = loanAmount - (loanAmount / n) * (y * 12);
     }
+
     const equity = propertyValue - loanBal;
-    const totalReturn = equity - equityIn + cumCashFlow + acqCosts; // appreciation gain + cf
+    // NAV: equity gained above initial + ops cash flows - (only counts ops, acqCosts already deducted via equityIn)
+    const nav = equity - equityIn + cumOpsCF;
+    const totalReturn = nav; // same thing
 
     years.push({
-      year: y,
-      propertyValue,
-      grossRent: rentThisYear,
-      netIncome: netThisYear,
-      mortgage: annualMortgage,
-      cashFlow: cfThisYear,
-      loanBalance: loanBal,
-      equity,
-      cumCashFlow,
-      totalReturn,
+      year: y, propertyValue, grossRent: rentThisYear,
+      netIncome: netThisYear, mortgage: annualMortgage,
+      cashFlow: cfThisYear, loanBalance: loanBal,
+      equity, cumOpsCF, nav, totalReturn,
     });
   }
 
-  const tenYearReturn = years[9].totalReturn;
-  const tenYearEquity = years[9].equity;
+  // ── IRR / Annualised ROI ──
+  // Cash flows for IRR: -equityIn at t=0, then annual CF, final year add equity from sale
+  const irrCFs = [{ t: 0, cf: -equityIn }];
+  for (let y = 1; y <= loanTerm; y++) {
+    const row = years[y];
+    let cf = row.cashFlow;
+    if (y === loanTerm) cf += row.equity; // sale proceeds (net of loan)
+    irrCFs.push({ t: y, cf });
+  }
+  const irr = computeIRR(irrCFs);
 
   return {
     purchasePrice, acqCosts, totalOutlay, loanAmount, equityIn,
@@ -181,114 +273,123 @@ function calculate(inp) {
     mgmtCost, maintCost, netIncomeAnnual, netIncomeMonthly,
     grossYield, netYield, kpf,
     annualCashFlow, monthlyCashFlow, cocReturn,
-    years, tenYearReturn, tenYearEquity,
+    years, irr,
   };
 }
 
-/* ── Formatting helpers ──────────────────────────────────────────────────── */
-const fmt = {
-  euro:  v => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v),
-  pct:   v => (v * 100).toFixed(2) + '%',
-  pct1:  v => (v * 100).toFixed(1) + '%',
-  x:     v => v.toFixed(1) + '×',
-  num:   v => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(v),
-};
-
-function yieldClass(y) {
-  if (y >= 0.04) return 'good';
-  if (y >= 0.03) return 'warn';
-  return 'bad';
-}
-function cfClass(cf) {
-  if (cf >= 100) return 'good';
-  if (cf >= 0)   return 'warn';
-  return 'bad';
-}
-
-/* ── Render KPI cards ────────────────────────────────────────────────────── */
-function renderKPIs(r) {
-  setKPI('kpiGrossYield',    fmt.pct(r.grossYield),    r.grossYield >= 0.04 ? 'good' : r.grossYield >= 0.03 ? 'warn' : 'bad');
-  setKPI('kpiNetYield',      fmt.pct(r.netYield),      r.netYield >= 0.03 ? 'good' : r.netYield >= 0.02 ? 'warn' : 'bad');
-  setKPI('kpiKpf',           fmt.x(r.kpf),             r.kpf <= 25 ? 'good' : r.kpf <= 33 ? 'warn' : 'bad');
-  setKPI('kpiCashflow',      fmt.euro(r.monthlyCashFlow), cfClass(r.monthlyCashFlow));
-  setKPI('kpiCoc',           fmt.pct1(r.cocReturn),    r.cocReturn >= 0.04 ? 'good' : r.cocReturn >= 0 ? 'warn' : 'bad');
-  setKPI('kpiTotalReturn',   fmt.euro(r.tenYearReturn), r.tenYearReturn >= 0 ? 'good' : 'bad');
-}
-function setKPI(id, val, cls) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = val;
-  const card = el.closest('.kpi-card');
-  if (card) {
-    card.classList.remove('good','warn','bad');
-    if (cls) card.classList.add(cls);
+/* ── IRR (Newton-Raphson) ────────────────────────────────────────────────── */
+function computeIRR(cashflows, guess = 0.08) {
+  const MAX_ITER = 100, TOLERANCE = 1e-7;
+  let r = guess;
+  for (let i = 0; i < MAX_ITER; i++) {
+    let npv = 0, dnpv = 0;
+    for (const { t, cf } of cashflows) {
+      const disc = Math.pow(1 + r, t);
+      npv  += cf / disc;
+      dnpv -= t * cf / (disc * (1 + r));
+    }
+    if (Math.abs(dnpv) < 1e-12) break;
+    const nr = r - npv / dnpv;
+    if (Math.abs(nr - r) < TOLERANCE) return nr;
+    r = nr;
   }
+  return r;
 }
 
-/* ── Render acquisition bar ──────────────────────────────────────────────── */
-function renderAcqBar(r, inp) {
-  set('acqPurchase', fmt.euro(r.purchasePrice));
-  set('acqCosts',    fmt.euro(r.acqCosts) + ` (${fmt.pct1((r.acqCosts / r.purchasePrice))})`);
-  set('acqTotal',    fmt.euro(r.totalOutlay));
-  set('acqEquity',   fmt.euro(r.equityIn));
-  set('acqMortgage', fmt.euro(r.monthlyMortgage) + '/mo');
-  set('purchasePriceDisplay', fmt.euro(r.purchasePrice));
-  set('loanAmountDisplay',    fmt.euro(r.loanAmount));
-}
+/* ══════════════════════════════════════════════════════════════════════════
+   FORMATTING
+══════════════════════════════════════════════════════════════════════════ */
+const euro = v => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v);
+const pct  = v => (v * 100).toFixed(2) + '%';
+const pct1 = v => (v * 100).toFixed(1) + '%';
+const fx   = v => v.toFixed(1) + '×';
+
 function set(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
 }
+function setKPI(valueId, val, cls) {
+  set(valueId, val);
+  const card = document.getElementById(valueId)?.closest('.kpi-card');
+  if (card) { card.classList.remove('good','warn','bad'); if (cls) card.classList.add(cls); }
+}
 
-/* ── Render chart ────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════════════════════════ */
+function renderKPIs(r) {
+  const gy = r.grossYield;
+  setKPI('kpiGrossYield', pct(gy),            gy >= 0.04 ? 'good' : gy >= 0.03 ? 'warn' : 'bad');
+  const ny = r.netYield;
+  setKPI('kpiNetYield',   pct(ny),            ny >= 0.03 ? 'good' : ny >= 0.02 ? 'warn' : 'bad');
+  const k = r.kpf;
+  setKPI('kpiKpf',        fx(k),              k <= 25 ? 'good' : k <= 33 ? 'warn' : 'bad');
+  const cf = r.monthlyCashFlow;
+  setKPI('kpiCashflow',   euro(cf),           cf >= 100 ? 'good' : cf >= 0 ? 'warn' : 'bad');
+  const coc = r.cocReturn;
+  setKPI('kpiCoc',        pct1(coc),          coc >= 0.04 ? 'good' : coc >= 0 ? 'warn' : 'bad');
+  const irr = r.irr;
+  const irrValid = isFinite(irr) && irr > -1 && irr < 2;
+  setKPI('kpiIrr', irrValid ? pct1(irr) : 'N/A', irrValid ? (irr >= 0.06 ? 'good' : irr >= 0.03 ? 'warn' : 'bad') : 'bad');
+}
+
+function renderAcqBar(r) {
+  set('acqPurchase', euro(r.purchasePrice));
+  set('acqCosts',    euro(r.acqCosts) + ' (' + pct1(r.acqCosts / r.purchasePrice) + ')');
+  set('acqTotal',    euro(r.totalOutlay));
+  set('acqEquity',   euro(r.equityIn));
+  set('acqMortgage', euro(r.monthlyMortgage) + '/mo');
+  set('purchasePriceDisplay', euro(r.purchasePrice));
+  set('loanAmountDisplay',    euro(r.loanAmount));
+}
+
 function renderChart(r) {
-  const labels = r.years.map(y => `Y${y.year}`);
-  const propVals   = r.years.map(y => Math.round(y.propertyValue));
-  const equityVals = r.years.map(y => Math.round(y.equity));
-  const ccfVals    = r.years.map(y => Math.round(y.cumCashFlow));
+  const inp    = getInputs();
+  const rows   = r.years;             // index 0 = year 0, index 1 = year 1 …
+  const labels = rows.map(y => y.year === 0 ? 'Now' : 'Y' + y.year);
+
+  // Only show up to 10 years on chart for readability (plus year 0)
+  const MAX_CHART = 11;
+  const display = rows.slice(0, MAX_CHART);
+  const dispLabels = display.map(y => y.year === 0 ? 'Now' : 'Y' + y.year);
 
   const ctx = document.getElementById('projectionChart').getContext('2d');
-
-  if (chart) { chart.destroy(); }
+  if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: dispLabels,
       datasets: [
         {
           label: 'Property Value',
-          data: propVals,
-          borderColor: '#1a56db',
-          backgroundColor: 'rgba(26,86,219,.06)',
-          borderWidth: 2.5,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: false,
-          tension: 0.3,
+          data: display.map(y => Math.round(y.propertyValue)),
+          borderColor: '#1a56db', backgroundColor: 'rgba(26,86,219,.05)',
+          borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+          fill: false, tension: 0.3,
         },
         {
           label: 'Equity',
-          data: equityVals,
-          borderColor: '#0e9f6e',
-          backgroundColor: 'rgba(14,159,110,.06)',
-          borderWidth: 2.5,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: false,
-          tension: 0.3,
+          data: display.map(y => Math.round(y.equity)),
+          borderColor: '#059669', backgroundColor: 'rgba(5,150,105,.05)',
+          borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+          fill: false, tension: 0.3,
         },
         {
           label: 'Cumulative Cash Flow',
-          data: ccfVals,
-          borderColor: '#e74694',
-          backgroundColor: 'rgba(231,70,148,.06)',
-          borderWidth: 2.5,
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: false,
-          tension: 0.3,
+          data: display.map(y => Math.round(y.cumOpsCF)),
+          borderColor: '#e74694', backgroundColor: 'rgba(231,70,148,.05)',
+          borderWidth: 2, pointRadius: 3, pointHoverRadius: 5,
+          fill: false, tension: 0.3,
           borderDash: [5, 3],
+        },
+        {
+          label: 'Net Asset Value',
+          data: display.map(y => Math.round(y.nav)),
+          borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.05)',
+          borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+          fill: false, tension: 0.3,
+          borderDash: [8, 4],
         },
       ],
     },
@@ -300,9 +401,8 @@ function renderChart(r) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: ctx => `  ${ctx.dataset.label}: ${new Intl.NumberFormat('de-DE', {
-              style: 'currency', currency: 'EUR', maximumFractionDigits: 0
-            }).format(ctx.parsed.y)}`,
+            label: ctx => '  ' + ctx.dataset.label + ': ' +
+              new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(ctx.parsed.y),
           },
           backgroundColor: '#1e293b',
           titleColor: '#94a3b8',
@@ -310,6 +410,7 @@ function renderChart(r) {
           padding: 10,
           cornerRadius: 8,
         },
+        annotation: undefined,
       },
       scales: {
         x: {
@@ -331,41 +432,40 @@ function renderChart(r) {
   });
 }
 
-/* ── Render breakdown table ──────────────────────────────────────────────── */
 function renderTable(r) {
   const tbody = document.getElementById('breakdownBody');
   if (!tbody) return;
-  tbody.innerHTML = r.years.map(y => `
+  // Skip year 0 in the table (start from year 1)
+  tbody.innerHTML = r.years.slice(1).map(y => `
     <tr>
       <td>Year ${y.year}</td>
-      <td>${fmt.euro(y.propertyValue)}</td>
-      <td>${fmt.euro(y.grossRent)}</td>
-      <td>${fmt.euro(y.netIncome)}</td>
-      <td>${fmt.euro(y.mortgage)}</td>
-      <td class="${y.cashFlow >= 0 ? 'positive' : 'negative'}">${fmt.euro(y.cashFlow)}</td>
-      <td>${fmt.euro(y.loanBalance)}</td>
-      <td class="highlight">${fmt.euro(y.equity)}</td>
-      <td class="${y.totalReturn >= 0 ? 'positive' : 'negative'}">${fmt.euro(y.totalReturn)}</td>
+      <td>${euro(y.propertyValue)}</td>
+      <td>${euro(y.grossRent)}</td>
+      <td>${euro(y.netIncome)}</td>
+      <td>${euro(y.mortgage)}</td>
+      <td class="${y.cashFlow >= 0 ? 'positive' : 'negative'}">${euro(y.cashFlow)}</td>
+      <td>${euro(y.loanBalance)}</td>
+      <td class="highlight">${euro(y.equity)}</td>
+      <td class="${y.nav >= 0 ? 'positive' : 'negative'}">${euro(y.nav)}</td>
     </tr>
   `).join('');
 }
 
-/* ── Render monthly breakdown ────────────────────────────────────────────── */
 function renderMonthly(r) {
   const grid = document.getElementById('monthlyGrid');
   if (!grid) return;
-
+  const vac = parseFloat(document.getElementById('vacancyNum').value) / 100;
+  const grossBeforeVac = r.grossRentAnnual / (1 - vac) / 12;
   const items = [
-    { label: 'Gross Rent',        value: fmt.euro(r.grossRentMonthly),   cls: 'neutral' },
-    { label: 'Vacancy Cost',      value: fmt.euro(-r.grossRentMonthly * (parseFloat(document.getElementById('vacancyNum').value)/100 / (1 - parseFloat(document.getElementById('vacancyNum').value)/100))), cls: 'negative' },
-    { label: 'Management Fee',    value: fmt.euro(-r.mgmtCost / 12),     cls: 'negative' },
-    { label: 'Maintenance',       value: fmt.euro(-r.maintCost / 12),    cls: 'negative' },
-    { label: 'Net Rental Income', value: fmt.euro(r.netIncomeMonthly),   cls: r.netIncomeMonthly >= 0 ? 'positive' : 'negative' },
-    { label: 'Mortgage Payment',  value: fmt.euro(-r.monthlyMortgage),   cls: 'negative' },
-    { label: 'Monthly Cash Flow', value: fmt.euro(r.monthlyCashFlow),    cls: r.monthlyCashFlow >= 0 ? 'positive' : 'negative' },
-    { label: 'Annual Cash Flow',  value: fmt.euro(r.annualCashFlow),     cls: r.annualCashFlow >= 0 ? 'positive' : 'negative' },
+    { label: 'Gross Rent (full)',    value: euro(grossBeforeVac),        cls: 'neutral'  },
+    { label: 'Vacancy Loss',         value: euro(-(grossBeforeVac - r.grossRentMonthly)), cls: 'negative' },
+    { label: 'Eff. Gross Rent',      value: euro(r.grossRentMonthly),    cls: 'neutral'  },
+    { label: 'Management Fee',       value: euro(-r.mgmtCost / 12),      cls: 'negative' },
+    { label: 'Maintenance',          value: euro(-r.maintCost / 12),     cls: 'negative' },
+    { label: 'Net Rental Income',    value: euro(r.netIncomeMonthly),    cls: r.netIncomeMonthly >= 0 ? 'positive' : 'negative' },
+    { label: 'Mortgage Payment',     value: euro(-r.monthlyMortgage),    cls: 'negative' },
+    { label: 'Monthly Cash Flow',    value: euro(r.monthlyCashFlow),     cls: r.monthlyCashFlow >= 0 ? 'positive' : 'negative' },
   ];
-
   grid.innerHTML = items.map(i => `
     <div class="monthly-item">
       <div class="monthly-item-label">${i.label}</div>
@@ -374,21 +474,23 @@ function renderMonthly(r) {
   `).join('');
 }
 
-/* ── Main recalc ─────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   MAIN RECALC
+══════════════════════════════════════════════════════════════════════════ */
 function recalc() {
   const inp = getInputs();
   const r   = calculate(inp);
   renderKPIs(r);
-  renderAcqBar(r, inp);
+  renderAcqBar(r);
   renderChart(r);
   renderTable(r);
   renderMonthly(r);
 }
 
-/* ── Init on load ────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialise all range gradients
-  document.querySelectorAll('input[type="range"]').forEach(el => updateRangeGradient(el.id));
-  // Load Leipzig as default
-  applyPreset('leipzig');
+  document.querySelectorAll('input[type="range"]').forEach(el => updateGradient(el.id));
+  resetConservative();   // start with conservative defaults (no city highlighted)
 });
