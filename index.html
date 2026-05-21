@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>German Real Estate Investment Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="header-icon">🏠</span>
+        <div>
+          <h1>German Real Estate Calculator</h1>
+          <p class="header-sub">Cities 500k+ · Yields · Cash Flow · 10-Year Projection</p>
+        </div>
+      </div>
+      <div class="header-note">Budget scope: €100k – €500k · Data: JLL / BNP / Colliers Q1 2026</div>
+    </div>
+  </header>
+
+  <!-- ── City Presets ───────────────────────────────────────────────────── -->
+  <section class="presets-bar">
+    <span class="presets-label">City presets:</span>
+    <div class="presets-scroll">
+      <button class="preset-btn tier1" data-city="leipzig"    onclick="applyPreset('leipzig')">Leipzig ★★★</button>
+      <button class="preset-btn tier1" data-city="dresden"    onclick="applyPreset('dresden')">Dresden ★★★</button>
+      <button class="preset-btn tier2" data-city="hannover"   onclick="applyPreset('hannover')">Hannover ★★</button>
+      <button class="preset-btn tier2" data-city="nuremberg"  onclick="applyPreset('nuremberg')">Nuremberg ★★★</button>
+      <button class="preset-btn tier2" data-city="cologne"    onclick="applyPreset('cologne')">Cologne ★★★</button>
+      <button class="preset-btn tier3" data-city="dusseldorf" onclick="applyPreset('dusseldorf')">Düsseldorf ★★</button>
+      <button class="preset-btn tier3" data-city="berlin"     onclick="applyPreset('berlin')">Berlin ★★★</button>
+      <button class="preset-btn tier4" data-city="hamburg"    onclick="applyPreset('hamburg')">Hamburg ★★★</button>
+      <button class="preset-btn tier4" data-city="frankfurt"  onclick="applyPreset('frankfurt')">Frankfurt ★★</button>
+      <button class="preset-btn tier4" data-city="munich"     onclick="applyPreset('munich')">Munich ★★★</button>
+    </div>
+  </section>
+
+  <!-- ── Main layout ───────────────────────────────────────────────────── -->
+  <main class="layout">
+
+    <!-- ── Sidebar: Inputs ───────────────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <div class="card">
+        <div class="card-title">Property</div>
+
+        <div class="field-group">
+          <label>Apartment size</label>
+          <div class="input-row">
+            <input type="range" id="size" min="20" max="150" step="1" value="55" oninput="syncNum('size','sizeNum');recalc()">
+            <input type="number" id="sizeNum" class="num-input" value="55" oninput="syncRange('sizeNum','size');recalc()">
+            <span class="unit">m²</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Price per m²</label>
+          <div class="input-row">
+            <input type="range" id="pricePerSqm" min="1000" max="14000" step="50" value="2500" oninput="syncNum('pricePerSqm','pricePerSqmNum');recalc()">
+            <input type="number" id="pricePerSqmNum" class="num-input" value="2500" oninput="syncRange('pricePerSqmNum','pricePerSqm');recalc()">
+            <span class="unit">€/m²</span>
+          </div>
+        </div>
+
+        <div class="field-group derived-row">
+          <label>Purchase price</label>
+          <span id="purchasePriceDisplay" class="derived-value">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Financing</div>
+
+        <div class="field-group">
+          <label>Down payment</label>
+          <div class="input-row">
+            <input type="range" id="downPayment" min="5" max="100" step="1" value="25" oninput="syncNum('downPayment','downPaymentNum');recalc()">
+            <input type="number" id="downPaymentNum" class="num-input" value="25" oninput="syncRange('downPaymentNum','downPayment');recalc()">
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Mortgage rate</label>
+          <div class="input-row">
+            <input type="range" id="mortgageRate" min="0.5" max="8" step="0.1" value="3.8" oninput="syncNum('mortgageRate','mortgageRateNum');recalc()">
+            <input type="number" id="mortgageRateNum" class="num-input" value="3.8" step="0.1" oninput="syncRange('mortgageRateNum','mortgageRate');recalc()">
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Loan term</label>
+          <div class="input-row">
+            <input type="range" id="loanTerm" min="5" max="30" step="1" value="25" oninput="syncNum('loanTerm','loanTermNum');recalc()">
+            <input type="number" id="loanTermNum" class="num-input" value="25" oninput="syncRange('loanTermNum','loanTerm');recalc()">
+            <span class="unit">yrs</span>
+          </div>
+        </div>
+
+        <div class="field-group derived-row">
+          <label>Loan amount</label>
+          <span id="loanAmountDisplay" class="derived-value">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Income</div>
+
+        <div class="field-group">
+          <label>Rent per m²</label>
+          <div class="input-row">
+            <input type="range" id="rentPerSqm" min="4" max="25" step="0.1" value="10.8" oninput="syncNum('rentPerSqm','rentPerSqmNum');recalc()">
+            <input type="number" id="rentPerSqmNum" class="num-input" value="10.8" step="0.1" oninput="syncRange('rentPerSqmNum','rentPerSqm');recalc()">
+            <span class="unit">€/m²</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Annual rent increase</label>
+          <div class="input-row">
+            <input type="range" id="rentIncrease" min="0" max="8" step="0.1" value="3.0" oninput="syncNum('rentIncrease','rentIncreaseNum');recalc()">
+            <input type="number" id="rentIncreaseNum" class="num-input" value="3.0" step="0.1" oninput="syncRange('rentIncreaseNum','rentIncrease');recalc()">
+            <span class="unit">%</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>Vacancy rate</label>
+          <div class="input-row">
+            <input type="range" id="vacancy" min="0" max="20" step="0.5" value="3" oninput="syncNum('vacancy','vacancyNum');recalc()">
+            <input type="number" id="vacancyNum" class="num-input" value="3" step="0.5" oninput="syncRange('vacancyNum','vacancy');recalc()">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Costs &amp; Growth</div>
+
+        <div class="field-group">
+          <label>Management fee</label>
+          <div class="input-row">
+            <input type="range" id="mgmtFee" min="0" max="15" step="0.5" value="8" oninput="syncNum('mgmtFee','mgmtFeeNum');recalc()">
+            <input type="number" id="mgmtFeeNum" class="num-input" value="8" step="0.5" oninput="syncRange('mgmtFeeNum','mgmtFee');recalc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="field-hint">% of gross rent</span>
+        </div>
+
+        <div class="field-group">
+          <label>Maintenance</label>
+          <div class="input-row">
+            <input type="range" id="maintenance" min="0" max="3" step="0.1" value="1.0" oninput="syncNum('maintenance','maintenanceNum');recalc()">
+            <input type="number" id="maintenanceNum" class="num-input" value="1.0" step="0.1" oninput="syncRange('maintenanceNum','maintenance');recalc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="field-hint">% of purchase price / yr</span>
+        </div>
+
+        <div class="field-group">
+          <label>Grunderwerbsteuer</label>
+          <div class="input-row">
+            <input type="range" id="transferTax" min="3.5" max="6.5" step="0.5" value="3.5" oninput="syncNum('transferTax','transferTaxNum');recalc()">
+            <input type="number" id="transferTaxNum" class="num-input" value="3.5" step="0.5" oninput="syncRange('transferTaxNum','transferTax');recalc()">
+            <span class="unit">%</span>
+          </div>
+          <span class="field-hint">Saxony 3.5% · NRW 6.5%</span>
+        </div>
+
+        <div class="field-group">
+          <label>Annual appreciation</label>
+          <div class="input-row">
+            <input type="range" id="appreciation" min="0" max="10" step="0.1" value="6.0" oninput="syncNum('appreciation','appreciationNum');recalc()">
+            <input type="number" id="appreciationNum" class="num-input" value="6.0" step="0.1" oninput="syncRange('appreciationNum','appreciation');recalc()">
+            <span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ── Main panel: Results ────────────────────────────────────────── -->
+    <section class="results">
+
+      <!-- KPI cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card" id="kpi-grossYield">
+          <div class="kpi-label">Gross Yield</div>
+          <div class="kpi-value" id="kpiGrossYield">—</div>
+          <div class="kpi-sub">Annual rent ÷ price</div>
+        </div>
+        <div class="kpi-card" id="kpi-netYield">
+          <div class="kpi-label">Net Yield</div>
+          <div class="kpi-value" id="kpiNetYield">—</div>
+          <div class="kpi-sub">After costs, before tax</div>
+        </div>
+        <div class="kpi-card" id="kpi-kpf">
+          <div class="kpi-label">Kaufpreisfaktor</div>
+          <div class="kpi-value" id="kpiKpf">—</div>
+          <div class="kpi-sub">Price ÷ annual rent</div>
+        </div>
+        <div class="kpi-card" id="kpi-cashflow">
+          <div class="kpi-label">Monthly Cash Flow</div>
+          <div class="kpi-value" id="kpiCashflow">—</div>
+          <div class="kpi-sub">Net income − mortgage</div>
+        </div>
+        <div class="kpi-card" id="kpi-coc">
+          <div class="kpi-label">Cash-on-Cash Return</div>
+          <div class="kpi-value" id="kpiCoc">—</div>
+          <div class="kpi-sub">Annual CF ÷ equity in</div>
+        </div>
+        <div class="kpi-card" id="kpi-totalReturn">
+          <div class="kpi-label">10Y Total Return</div>
+          <div class="kpi-value" id="kpiTotalReturn">—</div>
+          <div class="kpi-sub">Appreciation + cash flow</div>
+        </div>
+      </div>
+
+      <!-- Acquisition cost summary -->
+      <div class="card acquisition-bar">
+        <div class="acq-item">
+          <span class="acq-label">Purchase Price</span>
+          <span class="acq-val" id="acqPurchase">—</span>
+        </div>
+        <div class="acq-sep">+</div>
+        <div class="acq-item">
+          <span class="acq-label">Acquisition Costs</span>
+          <span class="acq-val" id="acqCosts">—</span>
+        </div>
+        <div class="acq-sep">=</div>
+        <div class="acq-item acq-total">
+          <span class="acq-label">Total Outlay</span>
+          <span class="acq-val" id="acqTotal">—</span>
+        </div>
+        <div class="acq-sep">│</div>
+        <div class="acq-item">
+          <span class="acq-label">Equity In</span>
+          <span class="acq-val" id="acqEquity">—</span>
+        </div>
+        <div class="acq-sep">│</div>
+        <div class="acq-item">
+          <span class="acq-label">Monthly Mortgage</span>
+          <span class="acq-val" id="acqMortgage">—</span>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card chart-card">
+        <div class="chart-header">
+          <div class="chart-title">10-Year Projection</div>
+          <div class="chart-legend-custom">
+            <span class="legend-dot" style="background:#1a56db"></span> Property Value &nbsp;
+            <span class="legend-dot" style="background:#0e9f6e"></span> Equity &nbsp;
+            <span class="legend-dot" style="background:#e74694"></span> Cumulative Cash Flow
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="projectionChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Detailed breakdown table -->
+      <div class="card">
+        <div class="card-title">Annual Breakdown — Year by Year</div>
+        <div class="table-wrap">
+          <table class="breakdown-table" id="breakdownTable">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Property Value</th>
+                <th>Gross Rent</th>
+                <th>Net Income</th>
+                <th>Mortgage Paid</th>
+                <th>Annual Cash Flow</th>
+                <th>Remaining Loan</th>
+                <th>Equity</th>
+                <th>Cum. Return</th>
+              </tr>
+            </thead>
+            <tbody id="breakdownBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Monthly breakdown -->
+      <div class="card">
+        <div class="card-title">Monthly Breakdown — Year 1</div>
+        <div class="monthly-grid" id="monthlyGrid">
+        </div>
+      </div>
+
+      <div class="disclaimer">
+        <strong>Disclaimer:</strong> This calculator is for illustrative purposes only and does not constitute financial or investment advice.
+        All figures are estimates based on inputs provided. Consult a qualified financial advisor before making investment decisions.
+        City presets sourced from JLL, BNP Paribas Real Estate, Colliers, and Investropa reports (Q1 2026).
+      </div>
+
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
