@@ -9,14 +9,14 @@
 </head>
 <body>
 
-  <!-- ── Tooltip (JS-positioned) ──────────────────────────────────────────── -->
   <div id="tooltip" class="tooltip" role="tooltip"></div>
 
   <!-- ── Header ───────────────────────────────────────────────────────────── -->
   <header>
     <div class="header-inner">
       <div class="header-brand">
-        <span class="brand-logo">▲</span>
+        <img src="logo.png" alt="ADAVAU" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('brand-fallback').style.display='flex'">
+        <div id="brand-fallback" class="brand-fallback" style="display:none">▲</div>
         <span class="brand-name">ADAVAU <span class="brand-light">Real Estate</span></span>
       </div>
       <div class="header-product">Investment Calculator</div>
@@ -38,7 +38,7 @@
   ═══════════════════════════════════════════════════════════════════════════ -->
   <div id="tab-calculator" class="tab-pane active">
 
-    <!-- Presets + Reset bar -->
+    <!-- Presets + Reset -->
     <section class="presets-bar">
       <span class="presets-label">City presets:</span>
       <div class="presets-scroll">
@@ -53,10 +53,19 @@
         <button class="preset-btn tier4" data-city="frankfurt"  onclick="applyPreset('frankfurt')">Frankfurt ★★</button>
         <button class="preset-btn tier4" data-city="munich"     onclick="applyPreset('munich')">Munich ★★★</button>
       </div>
-      <button class="reset-btn" onclick="resetConservative()" title="Reset all inputs to conservative baseline">
-        ↺ Reset to Conservative
-      </button>
+      <button class="reset-btn" onclick="resetConservative()">↺ Reset to Conservative</button>
     </section>
+
+    <!-- Share code bar -->
+    <div class="share-bar">
+      <span class="share-label">🔗 Scenario ID:</span>
+      <input type="text" id="shareCodeInput" class="share-input" spellcheck="false"
+             placeholder="Paste a code here, then click Load"
+             onkeydown="if(event.key==='Enter') loadCode()">
+      <button class="share-btn copy-btn" onclick="copyCode()" title="Copy this scenario code">Copy</button>
+      <button class="share-btn load-btn" onclick="loadCode()" title="Load the code you pasted">Load</button>
+      <span class="share-hint" id="shareHint"></span>
+    </div>
 
     <!-- Layout -->
     <main class="layout">
@@ -67,7 +76,6 @@
         <!-- Property -->
         <div class="card">
           <div class="card-title">Property</div>
-
           <div class="field-group">
             <label>Apartment size</label>
             <div class="input-row">
@@ -76,10 +84,8 @@
               <span class="unit">m²</span>
             </div>
           </div>
-
           <div class="field-group">
-            <label>
-              Price per m²
+            <label>Price per m²
               <span class="info-icon" data-tip="German price ranges (existing, Q1 2026):&#10;• Leipzig: €2,180–2,895&#10;• Dresden: €2,500–3,500&#10;• Hannover: €3,000–3,800&#10;• Nuremberg: €3,500–4,500&#10;• Cologne: €4,500–5,500&#10;• Berlin: €5,200–5,650&#10;• Hamburg: €5,743–6,500&#10;• Munich: €8,580–11,500">ⓘ</span>
             </label>
             <div class="input-row">
@@ -88,7 +94,6 @@
               <span class="unit">€/m²</span>
             </div>
           </div>
-
           <div class="field-group derived-row">
             <label>Purchase price</label>
             <span id="purchasePriceDisplay" class="derived-value">—</span>
@@ -98,11 +103,9 @@
         <!-- Financing -->
         <div class="card">
           <div class="card-title">Financing</div>
-
           <div class="field-group">
-            <label>
-              Down payment
-              <span class="info-icon" data-tip="German bank requirements:&#10;• Min. 20% own funds is the norm&#10;• Below 20% → higher rates or rejection&#10;• Investors typically use 25–35%&#10;• Acquisition costs (10–12%) must&#10;  always come from own funds">ⓘ</span>
+            <label>Down payment
+              <span class="info-icon" data-tip="German bank requirements:&#10;• Minimum 20% own funds is standard&#10;• Below 20% → higher rates or rejection&#10;• Investors typically use 25–35%&#10;• Note: Acquisition costs (10–12%)&#10;  must always come from own funds too">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="downPayment" min="5" max="100" step="1" value="30" oninput="syncNum('downPayment','downPaymentNum');recalc()">
@@ -110,11 +113,9 @@
               <span class="unit">%</span>
             </div>
           </div>
-
           <div class="field-group">
-            <label>
-              Mortgage rate
-              <span class="info-icon" data-tip="German market rates (May 2026):&#10;• 10yr fixed: 3.5 – 4.2%&#10;• 15yr fixed: 3.7 – 4.4%&#10;• Variable rate: 3.2 – 3.8%&#10;• ECB deposit rate: 3.25%&#10;Compare 3+ lenders; top lenders&#10;via Interhyp, Dr. Klein, ING">ⓘ</span>
+            <label>Mortgage rate
+              <span class="info-icon" data-tip="German market rates (May 2026):&#10;• 10yr fixed: 3.5–4.2%&#10;• 15yr fixed: 3.7–4.4%&#10;• Variable: 3.2–3.8%&#10;• ECB rate: 3.25%&#10;Compare lenders: Interhyp, Dr. Klein, ING">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="mortgageRate" min="0.5" max="8" step="0.1" value="4.2" oninput="syncNum('mortgageRate','mortgageRateNum');recalc()">
@@ -122,11 +123,9 @@
               <span class="unit">%</span>
             </div>
           </div>
-
           <div class="field-group">
-            <label>
-              Loan term
-              <span class="info-icon" data-tip="Standard range: 10–30 years&#10;Most investor loans: 15–25 yrs&#10;Longer term = lower monthly payment&#10;but more total interest paid.&#10;Full amortisation in 25 yrs is&#10;the most common investor choice.">ⓘ</span>
+            <label>Loan term
+              <span class="info-icon" data-tip="Standard range: 10–30 years&#10;Most investor loans: 15–25 yrs&#10;Longer term = lower monthly payment&#10;but more total interest paid.&#10;25 years is most common choice.">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="loanTerm" min="5" max="30" step="1" value="25" oninput="syncNum('loanTerm','loanTermNum');recalc()">
@@ -134,7 +133,6 @@
               <span class="unit">yrs</span>
             </div>
           </div>
-
           <div class="field-group derived-row">
             <label>Loan amount</label>
             <span id="loanAmountDisplay" class="derived-value">—</span>
@@ -144,10 +142,8 @@
         <!-- Income -->
         <div class="card">
           <div class="card-title">Income</div>
-
           <div class="field-group">
-            <label>
-              Rent per m²
+            <label>Rent per m²
               <span class="info-icon" data-tip="German averages (existing, 2026):&#10;• Leipzig: €10.6 / Dresden: €9.9&#10;• Hannover: €12.0 / Nuremberg: €13.0&#10;• Cologne: €15.8 / Düsseldorf: €14.8&#10;• Berlin: €14.0 / Hamburg: €16.0&#10;• Frankfurt: €17.5 / Munich: €19.0&#10;Furnished adds ~20–30% premium.">ⓘ</span>
             </label>
             <div class="input-row">
@@ -156,11 +152,9 @@
               <span class="unit">€/m²</span>
             </div>
           </div>
-
           <div class="field-group">
-            <label>
-              Annual rent increase
-              <span class="info-icon" data-tip="Mietpreisbremse limits:&#10;• New letting: max 10% above local&#10;  reference rent (Mietspiegel)&#10;• Existing tenants: max 15–20%&#10;  increase over 3 years&#10;Market avg growth 2024–2026: 3–5%&#10;Top cities (Düsseldorf): +8.3%&#10;New builds are exempt from cap.">ⓘ</span>
+            <label>Annual rent increase
+              <span class="info-icon" data-tip="Mietpreisbremse limits:&#10;• New letting: max 10% above local&#10;  reference rent (Mietspiegel)&#10;• Existing tenants: max 15–20%&#10;  increase over 3 years&#10;Market avg growth 2024–2026: 3–5%&#10;New builds are exempt from cap.">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="rentIncrease" min="0" max="8" step="0.1" value="2.0" oninput="syncNum('rentIncrease','rentIncreaseNum');recalc()">
@@ -168,11 +162,9 @@
               <span class="unit">%</span>
             </div>
           </div>
-
           <div class="field-group">
-            <label>
-              Vacancy rate
-              <span class="info-icon" data-tip="German vacancy benchmarks:&#10;• Munich / Berlin / Frankfurt: &lt;1%&#10;• Hamburg / Cologne: 1–2%&#10;• Düsseldorf / Stuttgart: 1–3%&#10;• Hannover / Nuremberg: 2–4%&#10;• Leipzig / Dresden: 3–5%&#10;Higher vacancy = lower effective yield.">ⓘ</span>
+            <label>Vacancy rate
+              <span class="info-icon" data-tip="German vacancy benchmarks:&#10;• Munich/Berlin/Frankfurt: &lt;1%&#10;• Hamburg/Cologne: 1–2%&#10;• Düsseldorf/Stuttgart: 1–3%&#10;• Hannover/Nuremberg: 2–4%&#10;• Leipzig/Dresden: 3–5%">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="vacancy" min="0" max="20" step="0.5" value="5.0" oninput="syncNum('vacancy','vacancyNum');recalc()">
@@ -185,11 +177,9 @@
         <!-- Costs & Growth -->
         <div class="card">
           <div class="card-title">Costs &amp; Growth</div>
-
           <div class="field-group">
-            <label>
-              Management fee
-              <span class="info-icon" data-tip="Typical German Hausverwaltung:&#10;• Basic (6–7%): rent collection,&#10;  minor repair coordination&#10;• Standard (8–10%): + tenant finding,&#10;  legal correspondence&#10;• Full service (10–12%): + maintenance&#10;  management, annual accounts&#10;Solo management: saves the fee but&#10;requires language skills + time.">ⓘ</span>
+            <label>Management fee
+              <span class="info-icon" data-tip="Typical German Hausverwaltung:&#10;• Basic (6–7%): rent collection only&#10;• Standard (8–10%): + tenant finding&#10;• Full service (10–12%): + maintenance&#10;Solo management saves the fee but&#10;requires language skills &amp; time.">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="mgmtFee" min="0" max="15" step="0.5" value="10.0" oninput="syncNum('mgmtFee','mgmtFeeNum');recalc()">
@@ -198,11 +188,9 @@
             </div>
             <span class="field-hint">% of gross rent</span>
           </div>
-
           <div class="field-group">
-            <label>
-              Maintenance
-              <span class="info-icon" data-tip="Industry standard (annual):&#10;• New build (&lt;10 yrs): 0.5–1.0%&#10;• Mid-age (10–30 yrs): 1.0–1.5%&#10;• Older stock (&gt;30 yrs): 1.5–2.5%&#10;Includes: regular upkeep, small&#10;repairs, appliance replacement.&#10;Major renovations (roof, windows)&#10;should be budgeted separately.">ⓘ</span>
+            <label>Maintenance
+              <span class="info-icon" data-tip="Industry standard (annual):&#10;• New build (&lt;10 yrs): 0.5–1.0%&#10;• Mid-age (10–30 yrs): 1.0–1.5%&#10;• Older stock (&gt;30 yrs): 1.5–2.5%&#10;Includes: repairs, small replacements.&#10;Major works (roof, windows) extra.">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="maintenance" min="0" max="3" step="0.1" value="1.5" oninput="syncNum('maintenance','maintenanceNum');recalc()">
@@ -211,11 +199,9 @@
             </div>
             <span class="field-hint">% of purchase price / yr</span>
           </div>
-
           <div class="field-group">
-            <label>
-              Grunderwerbsteuer
-              <span class="info-icon" data-tip="Transfer tax by Bundesland:&#10;• Bayern, Sachsen: 3.5%&#10;• Hamburg: 5.5%&#10;• Sachsen-Anhalt, Thüringen: 5.0%&#10;• Niedersachsen: 5.0%&#10;• Berlin, Bremen, Hessen, MV: 6.0%&#10;• NRW, Saarland, SH, BB, RP: 6.5%&#10;Add: notary 1.5% + register 0.5%&#10;+ agent 3.57% = total ~9–12%">ⓘ</span>
+            <label>Grunderwerbsteuer
+              <span class="info-icon" data-tip="Transfer tax by Bundesland:&#10;• Bayern, Sachsen: 3.5%&#10;• Hamburg: 5.5%&#10;• Sachsen-Anhalt, Thüringen: 5.0%&#10;• Berlin, Bremen, Hessen, MV: 6.0%&#10;• NRW, Saarland, SH, BB, RP: 6.5%&#10;Add notary 1.5% + register 0.5%&#10;+ agent 3.57% = total ~9–12%">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="transferTax" min="3.5" max="6.5" step="0.5" value="5.0" oninput="syncNum('transferTax','transferTaxNum');recalc()">
@@ -224,16 +210,64 @@
             </div>
             <span class="field-hint">Saxony 3.5% · NRW 6.5%</span>
           </div>
-
           <div class="field-group">
-            <label>
-              Annual appreciation
-              <span class="info-icon" data-tip="City price growth forecasts 2026–2028:&#10;• Leipzig / Dresden: +5–7% p.a.&#10;• Hamburg: +4–6%&#10;• Cologne / Düsseldorf: +3–5%&#10;• Hannover / Nuremberg: +3–4%&#10;• Berlin: +3–4%&#10;• Frankfurt: +3–4%&#10;• Munich: +2–3%&#10;Source: JLL, Investropa Q1 2026">ⓘ</span>
+            <label>Annual appreciation
+              <span class="info-icon" data-tip="City price growth forecasts 2026–2028:&#10;• Leipzig / Dresden: +5–7% p.a.&#10;• Hamburg: +4–6%&#10;• Cologne / Düsseldorf: +3–5%&#10;• Hannover / Nuremberg: +3–4%&#10;• Berlin: +3–4% / Munich: +2–3%&#10;Source: JLL, Investropa Q1 2026">ⓘ</span>
             </label>
             <div class="input-row">
               <input type="range" id="appreciation" min="0" max="10" step="0.1" value="3.0" oninput="syncNum('appreciation','appreciationNum');recalc()">
               <input type="number" id="appreciationNum" class="num-input" value="3.0" step="0.1" oninput="syncRange('appreciationNum','appreciation');recalc()">
               <span class="unit">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax & AfA -->
+        <div class="card">
+          <div class="card-title">
+            Tax &amp; Depreciation (AfA)
+            <label class="toggle-switch" title="Enable tax effect modeling">
+              <input type="checkbox" id="taxEnabled" onchange="recalc()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="taxFields" class="tax-fields disabled">
+            <p class="tax-intro">In Germany, rental income is taxed at your marginal rate — but you can deduct depreciation (AfA) and mortgage interest, often creating a net tax saving in early years.</p>
+            <div class="field-group">
+              <label>Income tax bracket
+                <span class="info-icon" data-tip="German income tax brackets (2026):&#10;• Up to €11,604: 0% (tax-free)&#10;• €11,604–€66,760: 14–42% (progressive)&#10;• €66,760–€277,826: 42% (top rate)&#10;• Above €277,826: 45% (Reichensteuer)&#10;Rental profit is added on top of&#10;your other income and taxed at your&#10;marginal (highest applicable) rate.">ⓘ</span>
+              </label>
+              <div class="input-row">
+                <select id="taxBracket" class="select-input" onchange="recalc()">
+                  <option value="25">25% — Mid earner</option>
+                  <option value="30">30%</option>
+                  <option value="35">35%</option>
+                  <option value="42" selected>42% — High earner</option>
+                  <option value="45">45% — Top rate</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Building value share
+                <span class="info-icon" data-tip="Only the building (not the land) can&#10;be depreciated for tax purposes.&#10;Typical split in Germany:&#10;• Urban apartments: 70–85% building&#10;• Land-heavy areas: 60–70% building&#10;German tax office (Finanzamt) may&#10;review your split — use a realistic&#10;figure. 80% is a common default.">ⓘ</span>
+              </label>
+              <div class="input-row">
+                <input type="range" id="buildingPct" min="50" max="95" step="5" value="80" oninput="syncNum('buildingPct','buildingPctNum');recalc()">
+                <input type="number" id="buildingPctNum" class="num-input" value="80" oninput="syncRange('buildingPctNum','buildingPct');recalc()">
+                <span class="unit">%</span>
+              </div>
+              <span class="field-hint">% of purchase price = building</span>
+            </div>
+            <div class="field-group">
+              <label>AfA depreciation rate
+                <span class="info-icon" data-tip="AfA = Absetzung für Abnutzung&#10;(straight-line depreciation)&#10;• Existing buildings: 2% per year&#10;• New builds (post-2023): 3% per year&#10;• Historic buildings: up to 9%&#10;Applied to building value only (not land).&#10;AfA reduces taxable rental income.">ⓘ</span>
+              </label>
+              <div class="input-row">
+                <select id="afaRate" class="select-input" onchange="recalc()">
+                  <option value="2" selected>2% — Existing building</option>
+                  <option value="3">3% — New build (post-2023)</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
@@ -248,32 +282,32 @@
           <div class="kpi-card" id="kpi-grossYield">
             <div class="kpi-label">Gross Yield</div>
             <div class="kpi-value" id="kpiGrossYield">—</div>
-            <div class="kpi-sub">Annual rent ÷ price</div>
+            <div class="kpi-sub" id="kpiGrossYieldSub">Annual rent ÷ purchase price. Above 4% is healthy in Germany; below 3% is difficult to make work with a mortgage.</div>
           </div>
           <div class="kpi-card" id="kpi-netYield">
             <div class="kpi-label">Net Yield</div>
             <div class="kpi-value" id="kpiNetYield">—</div>
-            <div class="kpi-sub">After costs, before tax</div>
+            <div class="kpi-sub">Rent after vacancy, management &amp; maintenance costs ÷ price. This is your real income rate before financing. Above 3% is solid.</div>
           </div>
           <div class="kpi-card" id="kpi-kpf">
             <div class="kpi-label">Kaufpreisfaktor</div>
             <div class="kpi-value" id="kpiKpf">—</div>
-            <div class="kpi-sub">Price ÷ annual rent</div>
+            <div class="kpi-sub">How many years of rent equals the purchase price. Lower = better value. Under 25× is good; over 35× means you're paying a lot for each euro of rent.</div>
           </div>
           <div class="kpi-card" id="kpi-cashflow">
             <div class="kpi-label">Monthly Cash Flow</div>
             <div class="kpi-value" id="kpiCashflow">—</div>
-            <div class="kpi-sub">Net income − mortgage</div>
+            <div class="kpi-sub" id="kpiCashflowSub">Cash left each month after all running costs and the mortgage payment. Positive = the property pays for itself from day one.</div>
           </div>
           <div class="kpi-card" id="kpi-coc">
             <div class="kpi-label">Cash-on-Cash Return</div>
             <div class="kpi-value" id="kpiCoc">—</div>
-            <div class="kpi-sub">Annual CF ÷ equity in</div>
+            <div class="kpi-sub">Annual cash flow ÷ the cash you actually put in. This is your "dividend" on the money you invested. 5%+ beats most savings accounts.</div>
           </div>
           <div class="kpi-card" id="kpi-irr">
-            <div class="kpi-label">Annualised ROI</div>
+            <div class="kpi-label">Annualised ROI (IRR)</div>
             <div class="kpi-value" id="kpiIrr">—</div>
-            <div class="kpi-sub">IRR over loan term</div>
+            <div class="kpi-sub">True annual return over the full loan term — including rent, appreciation, and selling at the end. 7%+ competes with stock market returns.</div>
           </div>
         </div>
 
@@ -295,7 +329,7 @@
           </div>
           <div class="acq-sep">│</div>
           <div class="acq-item">
-            <span class="acq-label">Equity In</span>
+            <span class="acq-label">Your Cash In</span>
             <span class="acq-val" id="acqEquity">—</span>
           </div>
           <div class="acq-sep">│</div>
@@ -305,38 +339,52 @@
           </div>
         </div>
 
-        <!-- Chart -->
+        <!-- Chart + Sensitivity toggle -->
         <div class="card chart-card">
           <div class="chart-header">
-            <div class="chart-title">10-Year Projection</div>
-            <div class="chart-legend-custom">
-              <span class="legend-dot" style="background:#1a56db"></span>Property Value &nbsp;
-              <span class="legend-dot" style="background:#0e9f6e"></span>Equity &nbsp;
-              <span class="legend-dot" style="background:#e74694"></span>Cum. Cash Flow &nbsp;
-              <span class="legend-dot" style="background:#f59e0b; border:1px dashed #f59e0b"></span>Net Asset Value
+            <div class="chart-title">
+              <span id="chartViewTitle">10-Year Projection</span>
+            </div>
+            <div class="chart-controls">
+              <div class="chart-toggle-group">
+                <button class="chart-toggle-btn active" id="btnProjection" onclick="setChartView('projection')">📈 Projection</button>
+                <button class="chart-toggle-btn" id="btnSensitivity" onclick="setChartView('sensitivity')">📊 Sensitivity</button>
+              </div>
+              <div class="chart-legend-custom" id="projectionLegend">
+                <span class="legend-dot" style="background:#1a56db"></span>Property Value &nbsp;
+                <span class="legend-dot" style="background:#059669"></span>Equity &nbsp;
+                <span class="legend-dot" style="background:#e74694"></span>Cum. Cash Flow &nbsp;
+                <span class="legend-dot" style="background:#f59e0b"></span>Net Asset Value
+              </div>
             </div>
           </div>
-          <div class="chart-wrap">
+          <!-- Projection chart -->
+          <div id="projectionView" class="chart-wrap">
             <canvas id="projectionChart"></canvas>
+          </div>
+          <!-- Sensitivity matrix -->
+          <div id="sensitivityView" class="sens-wrap" style="display:none">
+            <div class="sens-intro">
+              <strong>Gross Yield Sensitivity</strong> — how yield changes as purchase price and monthly rent vary from your current inputs.
+              The highlighted cell is your current scenario.
+            </div>
+            <div id="sensitivityGrid" class="sens-grid-container"></div>
           </div>
         </div>
 
         <!-- Breakdown table -->
         <div class="card">
-          <div class="card-title">Annual Breakdown — Year by Year</div>
-          <div class="table-wrap">
+          <div class="card-title-row">
+            <span class="card-title" style="margin-bottom:0;border:none;padding:0">Year-by-Year Breakdown</span>
+            <button class="term-toggle-btn" id="termToggleBtn" onclick="toggleTableTerm()">Show full term</button>
+          </div>
+          <div class="table-wrap" style="margin-top:12px">
             <table class="breakdown-table">
               <thead>
                 <tr>
-                  <th>Year</th>
-                  <th>Property Value</th>
-                  <th>Gross Rent</th>
-                  <th>Net Income</th>
-                  <th>Mortgage Paid</th>
-                  <th>Annual Cash Flow</th>
-                  <th>Remaining Loan</th>
-                  <th>Equity</th>
-                  <th>Net Asset Value</th>
+                  <th>Year</th><th>Property Value</th><th>Gross Rent</th>
+                  <th>Net Income</th><th>Mortgage Paid</th><th>Cash Flow</th>
+                  <th>Remaining Loan</th><th>Equity</th><th>Net Asset Value</th>
                 </tr>
               </thead>
               <tbody id="breakdownBody"></tbody>
@@ -344,10 +392,10 @@
           </div>
         </div>
 
-        <!-- Monthly grid -->
+        <!-- P&L Monthly breakdown -->
         <div class="card">
-          <div class="card-title">Monthly Breakdown — Year 1</div>
-          <div class="monthly-grid" id="monthlyGrid"></div>
+          <div class="card-title" id="plTitle">Monthly P&amp;L — Year 1</div>
+          <div id="plStatement" class="pl-statement"></div>
         </div>
 
       </section>
@@ -360,59 +408,28 @@
   ═══════════════════════════════════════════════════════════════════════════ -->
   <div id="tab-comparables" class="tab-pane">
     <div class="comp-layout">
-
-      <!-- Left nav -->
       <nav class="comp-nav">
         <div class="comp-nav-title">Sections</div>
-        <a class="comp-nav-link active" href="#comp-mortgage"  onclick="compNavClick(this)">Mortgage &amp; Financing</a>
-        <a class="comp-nav-link"        href="#comp-rental"    onclick="compNavClick(this)">Rental Market</a>
-        <a class="comp-nav-link"        href="#comp-prices"    onclick="compNavClick(this)">Purchase Prices</a>
-        <a class="comp-nav-link"        href="#comp-yields"    onclick="compNavClick(this)">Yields &amp; Returns</a>
-        <a class="comp-nav-link"        href="#comp-supply"    onclick="compNavClick(this)">Supply &amp; Demand</a>
+        <a class="comp-nav-link active" href="#comp-mortgage"   onclick="compNavClick(this)">Mortgage &amp; Financing</a>
+        <a class="comp-nav-link"        href="#comp-rental"     onclick="compNavClick(this)">Rental Market</a>
+        <a class="comp-nav-link"        href="#comp-prices"     onclick="compNavClick(this)">Purchase Prices</a>
+        <a class="comp-nav-link"        href="#comp-yields"     onclick="compNavClick(this)">Yields &amp; Returns</a>
+        <a class="comp-nav-link"        href="#comp-supply"     onclick="compNavClick(this)">Supply &amp; Demand</a>
         <a class="comp-nav-link"        href="#comp-regulatory" onclick="compNavClick(this)">Regulatory Guide</a>
         <div class="comp-nav-footer">Data: JLL · BNP Paribas · Colliers · Investropa Q1 2026</div>
       </nav>
-
-      <!-- Content -->
       <div class="comp-content">
 
-        <!-- ── Mortgage & Financing ────────────────────────────────────── -->
         <section id="comp-mortgage" class="comp-section">
           <h2 class="comp-h2">Mortgage &amp; Financing</h2>
-
           <div class="comp-cards">
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">10yr Fixed Rate</div>
-              <div class="comp-stat-value">3.5 – 4.2%</div>
-              <div class="comp-stat-sub">Most common investor product</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">15yr Fixed Rate</div>
-              <div class="comp-stat-value">3.7 – 4.4%</div>
-              <div class="comp-stat-sub">Better long-term certainty</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Variable Rate</div>
-              <div class="comp-stat-value">3.2 – 3.8%</div>
-              <div class="comp-stat-sub">Tied to EURIBOR + spread</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">ECB Deposit Rate</div>
-              <div class="comp-stat-value">3.25%</div>
-              <div class="comp-stat-sub">May 2026</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Typical LTV</div>
-              <div class="comp-stat-value">70 – 80%</div>
-              <div class="comp-stat-sub">Max bank will lend on buy-to-let</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Typical Loan Term</div>
-              <div class="comp-stat-value">15 – 25 yrs</div>
-              <div class="comp-stat-sub">Investors prefer 20–25yr</div>
-            </div>
+            <div class="comp-stat-card"><div class="comp-stat-label">10yr Fixed Rate</div><div class="comp-stat-value">3.5 – 4.2%</div><div class="comp-stat-sub">Most common investor product</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">15yr Fixed Rate</div><div class="comp-stat-value">3.7 – 4.4%</div><div class="comp-stat-sub">Better long-term certainty</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Variable Rate</div><div class="comp-stat-value">3.2 – 3.8%</div><div class="comp-stat-sub">Tied to EURIBOR + spread</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">ECB Deposit Rate</div><div class="comp-stat-value">3.25%</div><div class="comp-stat-sub">May 2026</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Typical LTV</div><div class="comp-stat-value">70 – 80%</div><div class="comp-stat-sub">Max bank will lend on buy-to-let</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Typical Loan Term</div><div class="comp-stat-value">15 – 25 yrs</div><div class="comp-stat-sub">Investors prefer 20–25yr</div></div>
           </div>
-
           <h3 class="comp-h3">Historical 10-Year Fixed Mortgage Rate (Germany)</h3>
           <table class="comp-table">
             <thead><tr><th>Year</th><th>Avg Rate</th><th>ECB Key Rate</th><th>Market Context</th></tr></thead>
@@ -426,23 +443,14 @@
               <tr><td>2026</td><td class="highlight"><strong>3.5 – 4.2%</strong></td><td class="highlight"><strong>3.25%</strong></td><td>Steady; gradual easing expected H2 2026</td></tr>
             </tbody>
           </table>
-
-          <div class="comp-note">
-            <strong>Key rule:</strong> German banks require acquisition costs (Grunderwerbsteuer + notary + agent = 9–12% of purchase price) to be paid entirely from own funds. These do not factor into the LTV calculation. Total own funds needed = down payment + acquisition costs.
-          </div>
+          <div class="comp-note"><strong>Key rule:</strong> German banks require acquisition costs (Grunderwerbsteuer + notary + agent = 9–12%) to be paid entirely from own funds. Total own funds needed = down payment + acquisition costs.</div>
         </section>
 
-        <!-- ── Rental Market ──────────────────────────────────────────── -->
         <section id="comp-rental" class="comp-section">
           <h2 class="comp-h2">Rental Market</h2>
-
           <h3 class="comp-h3">Asking Rents by City — Existing Apartments (H2 2025 / Q1 2026)</h3>
           <table class="comp-table">
-            <thead>
-              <tr>
-                <th>City</th><th>Avg Rent €/m²</th><th>New Build €/m²</th><th>YoY Growth</th><th>Vacancy Rate</th><th>Rent Control</th>
-              </tr>
-            </thead>
+            <thead><tr><th>City</th><th>Avg Rent €/m²</th><th>New Build €/m²</th><th>YoY Growth</th><th>Vacancy Rate</th><th>Rent Control</th></tr></thead>
             <tbody>
               <tr class="row-tier1"><td><strong>Leipzig</strong></td><td>€10.6</td><td>€14.9</td><td class="positive">+5.4%</td><td>3–5%</td><td>Yes (MPB)</td></tr>
               <tr class="row-tier1"><td><strong>Dresden</strong></td><td>€9.9</td><td>€13.5</td><td class="positive">+4.2%</td><td>3–5%</td><td>Yes (MPB)</td></tr>
@@ -456,63 +464,33 @@
               <tr class="row-tier4"><td><strong>Munich</strong></td><td>€19.0</td><td>€24.5</td><td class="positive">+3.5%</td><td>&lt;1%</td><td>Strictest (MPB)</td></tr>
             </tbody>
           </table>
-          <p class="comp-caption">MPB = Mietpreisbremse (rent brake). Growth figures are H2 2025 YoY. Source: JLL, BNP Paribas Real Estate H2 2025.</p>
-
-          <div class="comp-note">
-            <strong>Furnished premium:</strong> Furnished apartments command a 20–30% rent premium. However, proposed 2026 reforms require landlords to itemise and justify the surcharge. New-build apartments (Neubau) remain fully exempt from rent controls and can be let at market rent.
-          </div>
+          <p class="comp-caption">MPB = Mietpreisbremse (rent brake). Source: JLL, BNP Paribas Real Estate H2 2025.</p>
         </section>
 
-        <!-- ── Purchase Prices ─────────────────────────────────────────── -->
         <section id="comp-prices" class="comp-section">
           <h2 class="comp-h2">Purchase Prices</h2>
-
           <h3 class="comp-h3">Price per m² by City — Q1 2026</h3>
           <table class="comp-table">
-            <thead>
-              <tr><th>City</th><th>Existing €/m²</th><th>New Build €/m²</th><th>YoY Change</th><th>€100–500k Budget Access</th></tr>
-            </thead>
+            <thead><tr><th>City</th><th>Existing €/m²</th><th>New Build €/m²</th><th>YoY Change</th><th>€100–500k Budget</th></tr></thead>
             <tbody>
-              <tr class="row-tier1"><td><strong>Leipzig</strong></td><td>€2,180 – 2,895</td><td>€3,800 – 4,500</td><td class="positive">+6.0%</td><td class="badge-green">Excellent</td></tr>
-              <tr class="row-tier1"><td><strong>Dresden</strong></td><td>€2,500 – 3,500</td><td>€4,000 – 5,000</td><td class="positive">+5.5%</td><td class="badge-green">Excellent</td></tr>
-              <tr class="row-tier2"><td><strong>Hannover</strong></td><td>€3,000 – 3,800</td><td>€4,500 – 5,500</td><td class="positive">+3.5%</td><td class="badge-blue">Very Good</td></tr>
-              <tr class="row-tier2"><td><strong>Nuremberg</strong></td><td>€3,500 – 4,500</td><td>€5,000 – 6,000</td><td class="positive">+3.5%</td><td class="badge-blue">Very Good</td></tr>
-              <tr class="row-tier2"><td><strong>Cologne</strong></td><td>€4,500 – 5,500</td><td>€6,500 – 8,000</td><td class="positive">+4.0%</td><td class="badge-amber">Good</td></tr>
-              <tr class="row-tier3"><td><strong>Düsseldorf</strong></td><td>€4,500 – 5,500</td><td>€6,500 – 8,000</td><td class="positive">+7.8%</td><td class="badge-amber">Good</td></tr>
-              <tr class="row-tier3"><td><strong>Berlin</strong></td><td>€5,200 – 5,650</td><td>€7,500 – 9,000</td><td class="positive">+3.5%</td><td class="badge-amber">Moderate</td></tr>
-              <tr class="row-tier4"><td><strong>Hamburg</strong></td><td>€5,743 – 6,500</td><td>€8,000 – 9,500</td><td class="positive">+4.5%</td><td class="badge-red">Limited</td></tr>
-              <tr class="row-tier4"><td><strong>Frankfurt</strong></td><td>€5,500 – 6,500</td><td>€8,000 – 10,000</td><td class="positive">+3.5%</td><td class="badge-red">Limited</td></tr>
-              <tr class="row-tier4"><td><strong>Munich</strong></td><td>€8,580 – 11,500</td><td>€11,500 – 14,000</td><td class="positive">+2.5%</td><td class="badge-red">Very Limited</td></tr>
+              <tr class="row-tier1"><td><strong>Leipzig</strong></td><td>€2,180 – 2,895</td><td>€3,800 – 4,500</td><td class="positive">+6.0%</td><td><span class="badge-green">Excellent</span></td></tr>
+              <tr class="row-tier1"><td><strong>Dresden</strong></td><td>€2,500 – 3,500</td><td>€4,000 – 5,000</td><td class="positive">+5.5%</td><td><span class="badge-green">Excellent</span></td></tr>
+              <tr class="row-tier2"><td><strong>Hannover</strong></td><td>€3,000 – 3,800</td><td>€4,500 – 5,500</td><td class="positive">+3.5%</td><td><span class="badge-blue">Very Good</span></td></tr>
+              <tr class="row-tier2"><td><strong>Nuremberg</strong></td><td>€3,500 – 4,500</td><td>€5,000 – 6,000</td><td class="positive">+3.5%</td><td><span class="badge-blue">Very Good</span></td></tr>
+              <tr class="row-tier2"><td><strong>Cologne</strong></td><td>€4,500 – 5,500</td><td>€6,500 – 8,000</td><td class="positive">+4.0%</td><td><span class="badge-amber">Good</span></td></tr>
+              <tr class="row-tier3"><td><strong>Düsseldorf</strong></td><td>€4,500 – 5,500</td><td>€6,500 – 8,000</td><td class="positive">+7.8%</td><td><span class="badge-amber">Good</span></td></tr>
+              <tr class="row-tier3"><td><strong>Berlin</strong></td><td>€5,200 – 5,650</td><td>€7,500 – 9,000</td><td class="positive">+3.5%</td><td><span class="badge-amber">Moderate</span></td></tr>
+              <tr class="row-tier4"><td><strong>Hamburg</strong></td><td>€5,743 – 6,500</td><td>€8,000 – 9,500</td><td class="positive">+4.5%</td><td><span class="badge-red">Limited</span></td></tr>
+              <tr class="row-tier4"><td><strong>Frankfurt</strong></td><td>€5,500 – 6,500</td><td>€8,000 – 10,000</td><td class="positive">+3.5%</td><td><span class="badge-red">Limited</span></td></tr>
+              <tr class="row-tier4"><td><strong>Munich</strong></td><td>€8,580 – 11,500</td><td>€11,500 – 14,000</td><td class="positive">+2.5%</td><td><span class="badge-red">Very Limited</span></td></tr>
             </tbody>
           </table>
-
-          <div class="comp-cards" style="margin-top:16px">
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Leipzig vs Munich</div>
-              <div class="comp-stat-value">3.3× cheaper</div>
-              <div class="comp-stat-sub">Convergence underway</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">5yr Appreciation Forecast</div>
-              <div class="comp-stat-value">+15 – 35%</div>
-              <div class="comp-stat-sub">Nationally; Eastern cities top end</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Acquisition Cost Range</div>
-              <div class="comp-stat-value">9 – 12%</div>
-              <div class="comp-stat-sub">On top of purchase price</div>
-            </div>
-          </div>
         </section>
 
-        <!-- ── Yields & Returns ─────────────────────────────────────────── -->
         <section id="comp-yields" class="comp-section">
           <h2 class="comp-h2">Yields &amp; Returns</h2>
-
           <table class="comp-table">
-            <thead>
-              <tr><th>City</th><th>Gross Yield</th><th>Est. Net Yield</th><th>KPF (×)</th><th>5yr Price Growth</th><th>Investment Tier</th></tr>
-            </thead>
+            <thead><tr><th>City</th><th>Gross Yield</th><th>Est. Net Yield</th><th>KPF (×)</th><th>5yr Price Growth</th><th>Tier</th></tr></thead>
             <tbody>
               <tr class="row-tier1"><td><strong>Leipzig</strong></td><td class="positive">4.5 – 5.4%</td><td class="positive">3.0 – 3.8%</td><td>20 – 22×</td><td class="positive">+5–7% p.a.</td><td><span class="badge-green">Tier 1</span></td></tr>
               <tr class="row-tier1"><td><strong>Dresden</strong></td><td class="positive">4.0 – 5.0%</td><td class="positive">2.8 – 3.5%</td><td>22 – 26×</td><td class="positive">+5–7% p.a.</td><td><span class="badge-green">Tier 1</span></td></tr>
@@ -526,115 +504,36 @@
               <tr class="row-tier4"><td><strong>Munich</strong></td><td class="negative">2.3 – 2.7%</td><td class="negative">1.2 – 1.6%</td><td>38 – 45×</td><td class="neutral">+2–3% p.a.</td><td><span class="badge-red">Tier 4</span></td></tr>
             </tbody>
           </table>
-          <p class="comp-caption">Net yield estimated by deducting 25–30% from gross for vacancy, management, maintenance. KPF = purchase price ÷ annual gross rent. Source: JLL, GlobalPropertyGuide, Colliers Q1 2026.</p>
-
-          <div class="comp-note">
-            <strong>Rule of thumb:</strong> Gross yield ≥ 4% is needed to cover financing costs (~4.2% mortgage rate) and generate positive cash flow. Below 4% gross typically means negative cash flow unless you have a very large down payment or very long loan term.
-          </div>
+          <div class="comp-note"><strong>Rule of thumb:</strong> Gross yield ≥ 4% is needed to cover financing costs (~4.2% mortgage) and generate positive cash flow. Below 4% gross typically means negative monthly cash flow unless you have a very large down payment.</div>
         </section>
 
-        <!-- ── Supply & Demand ─────────────────────────────────────────── -->
         <section id="comp-supply" class="comp-section">
           <h2 class="comp-h2">Supply &amp; Demand</h2>
-
           <div class="comp-cards">
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">New Units 2026</div>
-              <div class="comp-stat-value negative">~215,000</div>
-              <div class="comp-stat-sub">Completions forecast (Ifo)</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Annual Need</div>
-              <div class="comp-stat-value">~320,000</div>
-              <div class="comp-stat-sub">Required through 2030</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Annual Shortfall</div>
-              <div class="comp-stat-value negative">~105,000</div>
-              <div class="comp-stat-sub">Units/year undersupplied</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Intl Students 2024</div>
-              <div class="comp-stat-value positive">380,000</div>
-              <div class="comp-stat-sub">Record high; +12% YoY</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Student Accom Market</div>
-              <div class="comp-stat-value">€2.6bn</div>
-              <div class="comp-stat-sub">2025; 6.7% CAGR to 2030</div>
-            </div>
-            <div class="comp-stat-card">
-              <div class="comp-stat-label">Building Permits 2024</div>
-              <div class="comp-stat-value negative">~215,000</div>
-              <div class="comp-stat-sub">Lowest since 2010</div>
-            </div>
+            <div class="comp-stat-card"><div class="comp-stat-label">New Units 2026</div><div class="comp-stat-value negative">~215,000</div><div class="comp-stat-sub">Completions forecast (Ifo)</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Annual Need</div><div class="comp-stat-value">~320,000</div><div class="comp-stat-sub">Required through 2030</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Annual Shortfall</div><div class="comp-stat-value negative">~105,000</div><div class="comp-stat-sub">Units/year undersupplied</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Intl Students 2024</div><div class="comp-stat-value positive">380,000</div><div class="comp-stat-sub">Record high; +12% YoY</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Student Accom Market</div><div class="comp-stat-value">€2.6bn</div><div class="comp-stat-sub">2025; 6.7% CAGR to 2030</div></div>
+            <div class="comp-stat-card"><div class="comp-stat-label">Building Permits 2024</div><div class="comp-stat-value negative">~215,000</div><div class="comp-stat-sub">Lowest since 2010</div></div>
           </div>
-
-          <h3 class="comp-h3">Completions Trend vs Target</h3>
-          <table class="comp-table">
-            <thead><tr><th>Year</th><th>Completions</th><th>Gov. Target</th><th>Gap</th><th>Impact on Rents</th></tr></thead>
-            <tbody>
-              <tr><td>2022</td><td>295,000</td><td>400,000</td><td class="negative">−105,000</td><td>Rents start rising sharply</td></tr>
-              <tr><td>2023</td><td>260,000</td><td>400,000</td><td class="negative">−140,000</td><td>Rental growth accelerates</td></tr>
-              <tr><td>2024</td><td>235,000</td><td>400,000</td><td class="negative">−165,000</td><td>+6% national avg rent growth</td></tr>
-              <tr><td>2025</td><td>235,000</td><td>400,000</td><td class="negative">−165,000</td><td>+4–8% rent growth in major cities</td></tr>
-              <tr><td>2026F</td><td class="negative"><strong>215,000</strong></td><td>400,000</td><td class="negative"><strong>−185,000</strong></td><td>Further upward pressure expected</td></tr>
-            </tbody>
-          </table>
-
-          <div class="comp-note">
-            <strong>Structural driver:</strong> The supply shortfall is the single most important reason German residential rents and prices are rising. The gap between construction completions and household formation (driven by migration, single-person household growth) will persist through at least 2030, supporting the investment case in all major cities.
-          </div>
+          <div class="comp-note"><strong>Why this matters:</strong> Germany needs ~320,000 new apartments per year but is only building ~215,000. This gap grows each year and is the main reason rents keep rising — which is good news for landlords, but makes affordability harder for renters.</div>
         </section>
 
-        <!-- ── Regulatory Guide ──────────────────────────────────────────── -->
         <section id="comp-regulatory" class="comp-section">
           <h2 class="comp-h2">Regulatory Guide</h2>
-
           <h3 class="comp-h3">Key Regulations for Investors</h3>
           <table class="comp-table">
-            <thead><tr><th>Regulation</th><th>What It Means</th><th>Who Is Affected</th><th>Investor Impact</th></tr></thead>
+            <thead><tr><th>Regulation</th><th>What It Means</th><th>Investor Impact</th></tr></thead>
             <tbody>
-              <tr>
-                <td><strong>Mietpreisbremse</strong><br><small>Rent Brake (until 2029)</small></td>
-                <td>New tenancy rents cannot exceed 10% above local reference rent (Mietspiegel) in designated tight markets</td>
-                <td>All landlords in ~50% of municipalities</td>
-                <td class="negative">Limits rental upside on re-letting; caps yield at local market level</td>
-              </tr>
-              <tr>
-                <td><strong>Kappungsgrenze</strong><br><small>Cap on Increases</small></td>
-                <td>Max 20% rent increase over 3 years (15% in tight markets) for existing tenants</td>
-                <td>All existing tenancies</td>
-                <td class="negative">Slows rent catch-up on underrented stock</td>
-              </tr>
-              <tr>
-                <td><strong>Neubau Exemption</strong></td>
-                <td>New builds and first lettings post-substantial renovation are fully exempt from Mietpreisbremse</td>
-                <td>New-build buyers</td>
-                <td class="positive">Can charge market rent freely; key advantage for new build investors</td>
-              </tr>
-              <tr>
-                <td><strong>Indexmietvertrag</strong></td>
-                <td>Lease tied to CPI inflation index — annual increases track official inflation automatically</td>
-                <td>Available to all landlords</td>
-                <td class="neutral">Popular with investors; under 2026 regulatory review in tight markets</td>
-              </tr>
-              <tr>
-                <td><strong>Möblierungszuschlag</strong><br><small>Furnished Premium</small></td>
-                <td>Landlords can charge premium for furnished apartments; 2026 draft law requires itemised justification</td>
-                <td>Furnished apartment landlords</td>
-                <td class="neutral">20–30% premium currently; regulatory risk growing</td>
-              </tr>
-              <tr>
-                <td><strong>Spekulationssteuer</strong><br><small>Capital Gains Tax</small></td>
-                <td>Capital gains on sale are fully taxable if property sold within 10 years of purchase</td>
-                <td>All property investors</td>
-                <td class="negative">Hold for 10+ years to avoid CGT; plan exit accordingly</td>
-              </tr>
+              <tr><td><strong>Mietpreisbremse</strong><br><small>Rent Brake (until 2029)</small></td><td>New tenancy rents cannot exceed 10% above local reference rent in designated tight markets</td><td class="negative">Limits rental upside on re-letting</td></tr>
+              <tr><td><strong>Kappungsgrenze</strong></td><td>Max 20% rent increase over 3 years (15% in tight markets) for existing tenants</td><td class="negative">Slows rent catch-up on underrented stock</td></tr>
+              <tr><td><strong>Neubau Exemption</strong></td><td>New builds and first lettings post-substantial renovation are fully exempt</td><td class="positive">Can charge market rent freely</td></tr>
+              <tr><td><strong>Spekulationssteuer</strong></td><td>Capital gains on sale are fully taxable if sold within 10 years of purchase</td><td class="negative">Hold for 10+ years to avoid CGT</td></tr>
+              <tr><td><strong>AfA Depreciation</strong></td><td>2% (existing) or 3% (new build) of building value deductible from taxable rental income per year</td><td class="positive">Significant tax saving, especially in early years</td></tr>
             </tbody>
           </table>
-
-          <h3 class="comp-h3" style="margin-top:24px">Grunderwerbsteuer by Bundesland</h3>
+          <h3 class="comp-h3" style="margin-top:20px">Grunderwerbsteuer by Bundesland</h3>
           <table class="comp-table">
             <thead><tr><th>Bundesland</th><th>Rate</th><th>Major Cities</th></tr></thead>
             <tbody>
@@ -642,27 +541,13 @@
               <tr><td>Sachsen-Anhalt / Thüringen / Niedersachsen</td><td class="neutral">5.0%</td><td>Halle, Erfurt, Hannover</td></tr>
               <tr><td>Hamburg</td><td class="neutral">5.5%</td><td>Hamburg</td></tr>
               <tr><td>Berlin / Bremen / Hessen / Mecklenburg-Vorpommern</td><td class="negative">6.0%</td><td>Berlin, Frankfurt</td></tr>
-              <tr><td>NRW / Saarland / Schleswig-Holstein / Brandenburg / RP</td><td class="negative"><strong>6.5%</strong></td><td>Cologne, Düsseldorf, Dortmund, Essen</td></tr>
+              <tr><td>NRW / Saarland / Schleswig-Holstein / Brandenburg / RP</td><td class="negative"><strong>6.5%</strong></td><td>Cologne, Düsseldorf</td></tr>
             </tbody>
           </table>
-
-          <h3 class="comp-h3" style="margin-top:24px">Total Acquisition Cost Breakdown</h3>
-          <table class="comp-table">
-            <thead><tr><th>Cost</th><th>Rate</th><th>On a €250,000 Purchase</th></tr></thead>
-            <tbody>
-              <tr><td>Grunderwerbsteuer (Saxony)</td><td>3.5%</td><td>€8,750</td></tr>
-              <tr><td>Notary Fee (Notar)</td><td>~1.5%</td><td>€3,750</td></tr>
-              <tr><td>Land Register (Grundbuchamt)</td><td>~0.5%</td><td>€1,250</td></tr>
-              <tr><td>Buyer's Agent (if applicable)</td><td>~3.57%</td><td>€8,925</td></tr>
-              <tr><td><strong>Total (Saxony, with agent)</strong></td><td><strong>~9.07%</strong></td><td><strong>€22,675</strong></td></tr>
-              <tr><td><strong>Total (NRW, with agent)</strong></td><td><strong>~12.07%</strong></td><td><strong>€30,175</strong></td></tr>
-            </tbody>
-          </table>
-          <p class="comp-caption">All acquisition costs must come from own funds — banks do not include them in the mortgage. Notary and land register costs are fixed by German law (GNotKG).</p>
         </section>
 
-      </div><!-- /comp-content -->
-    </div><!-- /comp-layout -->
+      </div>
+    </div>
   </div><!-- /tab-comparables -->
 
   <script src="script.js"></script>
