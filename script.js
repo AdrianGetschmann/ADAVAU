@@ -26,7 +26,7 @@ const CONSERVATIVE = {
 
 /* ── State ───────────────────────────────────────────────────────────────── */
 let chart         = null;
-let chartView     = 'projection';   // 'projection' | 'sensitivity'
+let chartView     = 'projection';   // 'projection' | 'sensitivity' | 'pl'
 let showFullTerm  = false;
 let lastResult    = null;
 
@@ -167,6 +167,8 @@ function generateCode() {
 }
 
 function updateCode() {
+  const bar = document.getElementById('shareBar');
+  if (!bar || bar.style.display === 'none') return; // only update when bar is open
   const code = generateCode();
   const el = document.getElementById('shareCodeInput');
   if (el && document.activeElement !== el) el.value = code;
@@ -236,12 +238,27 @@ function setChartView(view) {
   chartView = view;
   document.getElementById('btnProjection').classList.toggle('active', view === 'projection');
   document.getElementById('btnSensitivity').classList.toggle('active', view === 'sensitivity');
+  document.getElementById('btnPL').classList.toggle('active', view === 'pl');
   document.getElementById('projectionView').style.display  = view === 'projection'  ? 'block' : 'none';
   document.getElementById('sensitivityView').style.display = view === 'sensitivity' ? 'block' : 'none';
+  document.getElementById('plView').style.display          = view === 'pl'          ? 'block' : 'none';
   document.getElementById('projectionLegend').style.display = view === 'projection' ? 'flex'  : 'none';
   document.getElementById('chartViewTitle').textContent =
-    view === 'projection' ? '10-Year Projection' : 'Sensitivity Matrix';
+    view === 'projection' ? '10-Year Projection' : view === 'sensitivity' ? 'Sensitivity Matrix' : 'Monthly P&L — Year 1';
   if (view === 'sensitivity' && lastResult) renderSensitivity(lastResult, getInputs());
+}
+
+function toggleShareBar() {
+  const bar = document.getElementById('shareBar');
+  const btn = document.getElementById('shareToggleBtn');
+  const isVisible = bar.style.display !== 'none';
+  bar.style.display = isVisible ? 'none' : 'flex';
+  btn.classList.toggle('active', !isVisible);
+  if (!isVisible) {
+    // Update the code when the bar opens
+    const el = document.getElementById('shareCodeInput');
+    if (el) el.value = generateCode();
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

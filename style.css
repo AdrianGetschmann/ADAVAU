@@ -64,6 +64,9 @@ header { background: #0f172a; padding: 0 24px; position: sticky; top: 0; z-index
 .preset-btn.tier4:hover,.preset-btn.tier4.active { background: #f9fafb; }
 .reset-btn { font-size: .72rem; font-weight: 700; padding: 4px 13px; border-radius: 6px; border: 1.5px solid var(--c-border); background: var(--c-surface); color: var(--c-text-mid); cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0; margin-left: 4px; }
 .reset-btn:hover { background: #f1f5f9; border-color: var(--c-text-mid); color: var(--c-text); }
+.share-toggle-btn { font-size: .72rem; font-weight: 700; padding: 4px 11px; border-radius: 6px; border: 1.5px solid #bfdbfe; background: #eff6ff; color: var(--c-accent); cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0; margin-left: 4px; }
+.share-toggle-btn:hover { background: var(--c-accent); color: white; border-color: var(--c-accent); }
+.share-toggle-btn.active { background: var(--c-accent); color: white; border-color: var(--c-accent); }
 
 /* ── Share code bar ──────────────────────────────────────────────────────── */
 .share-bar { background: #f8faff; border-bottom: 1px solid #dbeafe; padding: 6px 24px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -87,9 +90,12 @@ header { background: #0f172a; padding: 0 24px; position: sticky; top: 0; z-index
 .card-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--c-text-lt); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--c-border-lt); display: flex; align-items: center; justify-content: space-between; }
 .card-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
 
-/* ── Sidebar sticky ──────────────────────────────────────────────────────── */
-/* header 52 + tabs ~44 + presets ~40 + share ~36 = 172 — using 180 for breathing room */
-.sidebar { position: sticky; top: 180px; max-height: calc(100vh - 190px); overflow-y: auto; overflow-x: hidden; }
+/* ── Sidebar sticky — unified panel ─────────────────────────────────────── */
+/* header 52 + tabs ~44 + presets ~36 = 132 — using 140 for breathing room */
+.sidebar { position: sticky; top: 140px; max-height: calc(100vh - 150px); overflow-y: auto; overflow-x: hidden; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.sidebar .card { border: none; box-shadow: none; border-radius: 0; border-bottom: 1px solid var(--c-border-lt); margin-bottom: 0; }
+.sidebar .card:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.sidebar .card:last-child { border-bottom: none; border-radius: 0 0 var(--radius) var(--radius); }
 
 /* ── Field groups ────────────────────────────────────────────────────────── */
 .field-group { margin-bottom: 14px; }
@@ -135,7 +141,8 @@ header { background: #0f172a; padding: 0 24px; position: sticky; top: 0; z-index
 .kpi-card:hover { box-shadow: var(--shadow-md); }
 .kpi-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--c-text-lt); margin-bottom: 4px; }
 .kpi-value { font-size: 1.45rem; font-weight: 800; color: var(--c-text); line-height: 1.2; margin-bottom: 5px; transition: color .2s; }
-.kpi-sub { font-size: .68rem; color: var(--c-text-lt); line-height: 1.5; }
+.kpi-sub { font-size: .68rem; color: var(--c-text-lt); line-height: 1.5; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0; transition: max-height .3s ease, opacity .25s ease, margin-top .25s ease; }
+.kpi-card:hover .kpi-sub { max-height: 80px; opacity: 1; margin-top: 5px; }
 .kpi-card.good  { border-top-color: var(--c-green); }
 .kpi-card.good .kpi-value  { color: var(--c-green); }
 .kpi-card.warn  { border-top-color: var(--c-amber); }
@@ -179,6 +186,9 @@ header { background: #0f172a; padding: 0 24px; position: sticky; top: 0; z-index
 .sens-legend { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .sens-legend-item { display: flex; align-items: center; gap: 4px; font-size: .68rem; color: var(--c-text-mid); }
 .sens-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+/* ── P&L inside chart card ───────────────────────────────────────────────── */
+.pl-view-wrap { padding: 6px 0 2px; max-height: 540px; overflow-y: auto; }
 
 /* ── Table ───────────────────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; }

@@ -38,9 +38,8 @@
   ═══════════════════════════════════════════════════════════════════════════ -->
   <div id="tab-calculator" class="tab-pane active">
 
-    <!-- Presets + Reset -->
+    <!-- Presets + Reset + Share toggle -->
     <section class="presets-bar">
-      <span class="presets-label">City presets:</span>
       <div class="presets-scroll">
         <button class="preset-btn tier1" data-city="leipzig"    onclick="applyPreset('leipzig')">Leipzig ★★★</button>
         <button class="preset-btn tier1" data-city="dresden"    onclick="applyPreset('dresden')">Dresden ★★★</button>
@@ -53,12 +52,13 @@
         <button class="preset-btn tier4" data-city="frankfurt"  onclick="applyPreset('frankfurt')">Frankfurt ★★</button>
         <button class="preset-btn tier4" data-city="munich"     onclick="applyPreset('munich')">Munich ★★★</button>
       </div>
-      <button class="reset-btn" onclick="resetConservative()">↺ Reset to Conservative</button>
+      <button class="reset-btn" onclick="resetConservative()">↺ Reset</button>
+      <button class="share-toggle-btn" id="shareToggleBtn" onclick="toggleShareBar()" title="Share or load a scenario code">🔗 Share</button>
     </section>
 
-    <!-- Share code bar -->
-    <div class="share-bar">
-      <span class="share-label">🔗 Scenario ID:</span>
+    <!-- Share code bar (hidden by default) -->
+    <div class="share-bar" id="shareBar" style="display:none">
+      <span class="share-label">Scenario Code:</span>
       <input type="text" id="shareCodeInput" class="share-input" spellcheck="false"
              placeholder="Paste a code here, then click Load"
              onkeydown="if(event.key==='Enter') loadCode()">
@@ -349,6 +349,7 @@
               <div class="chart-toggle-group">
                 <button class="chart-toggle-btn active" id="btnProjection" onclick="setChartView('projection')">📈 Projection</button>
                 <button class="chart-toggle-btn" id="btnSensitivity" onclick="setChartView('sensitivity')">📊 Sensitivity</button>
+                <button class="chart-toggle-btn" id="btnPL" onclick="setChartView('pl')">📋 P&amp;L</button>
               </div>
               <div class="chart-legend-custom" id="projectionLegend">
                 <span class="legend-dot" style="background:#1a56db"></span>Property Value &nbsp;
@@ -370,6 +371,10 @@
             </div>
             <div id="sensitivityGrid" class="sens-grid-container"></div>
           </div>
+          <!-- P&L view -->
+          <div id="plView" class="pl-view-wrap" style="display:none">
+            <div id="plStatement" class="pl-statement"></div>
+          </div>
         </div>
 
         <!-- Breakdown table -->
@@ -390,12 +395,6 @@
               <tbody id="breakdownBody"></tbody>
             </table>
           </div>
-        </div>
-
-        <!-- P&L Monthly breakdown -->
-        <div class="card">
-          <div class="card-title" id="plTitle">Monthly P&amp;L — Year 1</div>
-          <div id="plStatement" class="pl-statement"></div>
         </div>
 
       </section>
